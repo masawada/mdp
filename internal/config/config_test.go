@@ -104,3 +104,73 @@ func TestConfigPath(t *testing.T) {
 		configPath()
 	})
 }
+
+func TestLoad(t *testing.T) {
+	t.Run("file not found returns default", func(t *testing.T) {
+		original := userConfigDir
+		defer func() { userConfigDir = original }()
+
+		userConfigDir = func() (string, error) {
+			return "/nonexistent/path", nil
+		}
+
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.OutputDir != DefaultOutputDir() {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, DefaultOutputDir())
+		}
+		if cfg.BrowserCommand != DefaultBrowserCommand() {
+			t.Errorf("BrowserCommand = %q, want %q", cfg.BrowserCommand, DefaultBrowserCommand())
+		}
+	})
+
+	t.Run("valid config file", func(t *testing.T) {
+		original := userConfigDir
+		defer func() { userConfigDir = original }()
+
+		tmpDir := t.TempDir()
+		configDir := filepath.Join(tmpDir, "mdp")
+		os.MkdirAll(configDir, 0755)
+		configFile := filepath.Join(configDir, "config.yaml")
+		content := []byte("output_dir: /custom/output\nbrowser_command: firefox\n")
+		os.WriteFile(configFile, content, 0644)
+
+		userConfigDir = func() (string, error) {
+			return tmpDir, nil
+		}
+
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.OutputDir != "/custom/output" {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, "/custom/output")
+		}
+		if cfg.BrowserCommand != "firefox" {
+			t.Errorf("BrowserCommand = %q, want %q", cfg.BrowserCommand, "firefox")
+		}
+	})
+
+	t.Run("invalid yaml returns error", func(t *testing.T) {
+		original := userConfigDir
+		defer func() { userConfigDir = original }()
+
+		tmpDir := t.TempDir()
+		configDir := filepath.Join(tmpDir, "mdp")
+		os.MkdirAll(configDir, 0755)
+		configFile := filepath.Join(configDir, "config.yaml")
+		content := []byte("invalid: yaml: content:\n")
+		os.WriteFile(configFile, content, 0644)
+
+		userConfigDir = func() (string, error) {
+			return tmpDir, nil
+		}
+
+		_, err := Load()
+		if err == nil {
+			t.Error("Load() should return error for invalid yaml")
+		}
+	})
+}
