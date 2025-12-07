@@ -42,3 +42,46 @@ func TestConvert_Basic(t *testing.T) {
 		})
 	}
 }
+
+func TestConvert_GFM(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		contains []string
+	}{
+		{
+			name:     "table",
+			input:    "| a | b |\n|---|---|\n| 1 | 2 |",
+			contains: []string{"<table>", "<th>a</th>", "<td>1</td>", "</table>"},
+		},
+		{
+			name:     "strikethrough",
+			input:    "~~deleted~~",
+			contains: []string{"<del>deleted</del>"},
+		},
+		{
+			name:     "task list",
+			input:    "- [ ] todo\n- [x] done",
+			contains: []string{"<input", "type=\"checkbox\"", "checked"},
+		},
+		{
+			name:     "autolink",
+			input:    "Visit https://example.com for more info.",
+			contains: []string{"<a href=\"https://example.com\""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := Convert([]byte(tt.input))
+			if err != nil {
+				t.Fatalf("Convert() error: %v", err)
+			}
+			for _, want := range tt.contains {
+				if !strings.Contains(string(result), want) {
+					t.Errorf("Convert() result does not contain %q\ngot: %s", want, result)
+				}
+			}
+		})
+	}
+}
