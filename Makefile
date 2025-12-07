@@ -1,10 +1,9 @@
-
 BINARY_NAME := mdp
 GO := go
 GOFLAGS :=
 MAIN_PATH := ./cmd/mdp/main.go
 
-.PHONY: all build 
+.PHONY: all build test e2e-test
 
 all: build
 
@@ -17,3 +16,8 @@ test:
 	@echo "Running tests..."
 	$(GO) test ./...
 	@echo "Tests completed."
+
+e2e-test: build
+	@echo "Running e2e tests..."
+	./e2e/run.sh
+	@echo "E2E tests completed."
