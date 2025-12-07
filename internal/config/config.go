@@ -47,13 +47,17 @@ type Config struct {
 	BrowserCommand string `yaml:"browser_command"`
 }
 
-func Load() (*Config, error) {
+func Load(path string) (*Config, error) {
 	cfg := &Config{
 		OutputDir:      DefaultOutputDir(),
 		BrowserCommand: DefaultBrowserCommand(),
 	}
 
-	data, err := os.ReadFile(configPath())
+	if path == "" {
+		path = configPath()
+	}
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return cfg, nil

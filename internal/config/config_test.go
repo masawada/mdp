@@ -107,14 +107,7 @@ func TestConfigPath(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 	t.Run("file not found returns default", func(t *testing.T) {
-		original := userConfigDir
-		defer func() { userConfigDir = original }()
-
-		userConfigDir = func() (string, error) {
-			return "/nonexistent/path", nil
-		}
-
-		cfg, err := Load()
+		cfg, err := Load("/nonexistent/path/config.yaml")
 		if err != nil {
 			t.Fatalf("Load() returned error: %v", err)
 		}
@@ -126,22 +119,23 @@ func TestLoad(t *testing.T) {
 		}
 	})
 
-	t.Run("valid config file", func(t *testing.T) {
-		original := userConfigDir
-		defer func() { userConfigDir = original }()
+	t.Run("empty path uses default config path", func(t *testing.T) {
+		cfg, err := Load("")
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.OutputDir != DefaultOutputDir() {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, DefaultOutputDir())
+		}
+	})
 
+	t.Run("valid config file", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		configDir := filepath.Join(tmpDir, "mdp")
-		os.MkdirAll(configDir, 0755)
-		configFile := filepath.Join(configDir, "config.yaml")
+		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\nbrowser_command: firefox\n")
 		os.WriteFile(configFile, content, 0644)
 
-		userConfigDir = func() (string, error) {
-			return tmpDir, nil
-		}
-
-		cfg, err := Load()
+		cfg, err := Load(configFile)
 		if err != nil {
 			t.Fatalf("Load() returned error: %v", err)
 		}
@@ -154,21 +148,12 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("invalid yaml returns error", func(t *testing.T) {
-		original := userConfigDir
-		defer func() { userConfigDir = original }()
-
 		tmpDir := t.TempDir()
-		configDir := filepath.Join(tmpDir, "mdp")
-		os.MkdirAll(configDir, 0755)
-		configFile := filepath.Join(configDir, "config.yaml")
+		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("invalid: yaml: content:\n")
 		os.WriteFile(configFile, content, 0644)
 
-		userConfigDir = func() (string, error) {
-			return tmpDir, nil
-		}
-
-		_, err := Load()
+		_, err := Load(configFile)
 		if err == nil {
 			t.Error("Load() should return error for invalid yaml")
 		}
