@@ -37,3 +37,42 @@ func TestDefaultOutputDir(t *testing.T) {
 		DefaultOutputDir()
 	})
 }
+
+func TestDefaultBrowserCommand(t *testing.T) {
+	t.Run("returns open on darwin", func(t *testing.T) {
+		original := goos
+		defer func() { goos = original }()
+
+		goos = "darwin"
+		cmd := DefaultBrowserCommand()
+		if cmd != "open" {
+			t.Errorf("DefaultBrowserCommand() = %q, want \"open\"", cmd)
+		}
+	})
+
+	t.Run("returns xdg-open on linux", func(t *testing.T) {
+		original := goos
+		defer func() { goos = original }()
+
+		goos = "linux"
+		cmd := DefaultBrowserCommand()
+		if cmd != "xdg-open" {
+			t.Errorf("DefaultBrowserCommand() = %q, want \"xdg-open\"", cmd)
+		}
+	})
+
+	t.Run("panics on unsupported platform", func(t *testing.T) {
+		original := goos
+		defer func() { goos = original }()
+
+		goos = "windows"
+
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("DefaultBrowserCommand() should panic on unsupported platform")
+			}
+		}()
+
+		DefaultBrowserCommand()
+	})
+}

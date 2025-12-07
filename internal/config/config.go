@@ -1,11 +1,14 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 var userHomeDir = os.UserHomeDir
+var goos = runtime.GOOS
 
 func DefaultOutputDir() string {
 	homeDir, err := userHomeDir()
@@ -13,4 +16,15 @@ func DefaultOutputDir() string {
 		panic(err)
 	}
 	return filepath.Join(homeDir, ".mdp")
+}
+
+func DefaultBrowserCommand() string {
+	switch goos {
+	case "darwin":
+		return "open"
+	case "linux":
+		return "xdg-open"
+	default:
+		panic(fmt.Sprintf("unsupported platform: %s", goos))
+	}
 }
