@@ -76,3 +76,31 @@ func TestDefaultBrowserCommand(t *testing.T) {
 		DefaultBrowserCommand()
 	})
 }
+
+func TestConfigPath(t *testing.T) {
+	t.Run("returns UserConfigDir/mdp/config.yaml", func(t *testing.T) {
+		configDir, _ := os.UserConfigDir()
+		expected := filepath.Join(configDir, "mdp", "config.yaml")
+		actual := configPath()
+		if actual != expected {
+			t.Errorf("configPath() = %q, want %q", actual, expected)
+		}
+	})
+
+	t.Run("panics when UserConfigDir fails", func(t *testing.T) {
+		original := userConfigDir
+		defer func() { userConfigDir = original }()
+
+		userConfigDir = func() (string, error) {
+			return "", errors.New("UserConfigDir not available")
+		}
+
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("configPath() should panic when UserConfigDir fails")
+			}
+		}()
+
+		configPath()
+	})
+}

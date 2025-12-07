@@ -8,6 +8,7 @@ import (
 )
 
 var userHomeDir = os.UserHomeDir
+var userConfigDir = os.UserConfigDir
 var goos = runtime.GOOS
 
 func DefaultOutputDir() string {
@@ -27,4 +28,12 @@ func DefaultBrowserCommand() string {
 	default:
 		panic(fmt.Sprintf("unsupported platform: %s", goos))
 	}
+}
+
+func configPath() string {
+	configDir, err := userConfigDir()
+	if err != nil {
+		panic(err)
+	}
+	return filepath.Join(configDir, "mdp", "config.yaml")
 }
