@@ -9,22 +9,6 @@ import (
 	"testing"
 )
 
-func TestRun_NoArgs(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	c := &cli{
-		outWriter: &stdout,
-		errWriter: &stderr,
-	}
-
-	exitCode := c.run([]string{})
-	if exitCode != 1 {
-		t.Errorf("run() exit code = %d, want 1", exitCode)
-	}
-	if !strings.Contains(stderr.String(), "usage") {
-		t.Errorf("stderr should contain usage message, got: %s", stderr.String())
-	}
-}
-
 func TestRun_FileNotFound(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	c := &cli{
@@ -32,7 +16,7 @@ func TestRun_FileNotFound(t *testing.T) {
 		errWriter: &stderr,
 	}
 
-	exitCode := c.run([]string{"/nonexistent/file.md"})
+	exitCode := c.run("/nonexistent/file.md")
 	if exitCode != 1 {
 		t.Errorf("run() exit code = %d, want 1", exitCode)
 	}
@@ -59,7 +43,7 @@ func TestRun_Success(t *testing.T) {
 		configPath: configFile,
 	}
 
-	exitCode := c.run([]string{mdFile})
+	exitCode := c.run(mdFile)
 	if exitCode != 0 {
 		t.Errorf("run() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
 	}

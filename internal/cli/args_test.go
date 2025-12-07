@@ -1,0 +1,73 @@
+package cli
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestParseArgs(t *testing.T) {
+	tests := []struct {
+		name       string
+		args       []string
+		wantArgs   *parsedArgs
+		wantErrMsg string
+	}{
+		{
+			name: "no config flag",
+			args: []string{"test.md"},
+			wantArgs: &parsedArgs{
+				configPath: "",
+				filePath:   "test.md",
+			},
+		},
+		{
+			name: "config flag with value",
+			args: []string{"--config", "/path/to/config.yaml", "test.md"},
+			wantArgs: &parsedArgs{
+				configPath: "/path/to/config.yaml",
+				filePath:   "test.md",
+			},
+		},
+		{
+			name:       "config flag without value",
+			args:       []string{"--config"},
+			wantErrMsg: "flag needs an argument",
+		},
+		{
+			name:       "no arguments",
+			args:       []string{},
+			wantErrMsg: "markdown file is required",
+		},
+		{
+			name:       "only config flag",
+			args:       []string{"--config", "/path/to/config.yaml"},
+			wantErrMsg: "markdown file is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseArgs(tt.args)
+			if tt.wantErrMsg != "" {
+				if err == nil {
+					t.Errorf("parseArgs() expected error containing %q, got nil", tt.wantErrMsg)
+					return
+				}
+				if !strings.Contains(err.Error(), tt.wantErrMsg) {
+					t.Errorf("parseArgs() error = %q, want error containing %q", err.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("parseArgs() unexpected error = %v", err)
+				return
+			}
+			if got.configPath != tt.wantArgs.configPath {
+				t.Errorf("parseArgs() configPath = %v, want %v", got.configPath, tt.wantArgs.configPath)
+			}
+			if got.filePath != tt.wantArgs.filePath {
+				t.Errorf("parseArgs() filePath = %v, want %v", got.filePath, tt.wantArgs.filePath)
+			}
+		})
+	}
+}
