@@ -12,3 +12,8 @@ build:
 	@echo "Building $(BINARY_NAME)..."
 	$(GO) build $(GOFLAGS) -o $(BINARY_NAME) $(MAIN_PATH)
 	@echo "Build complete: $(BINARY_NAME)"
+
+test:
+	@echo "Running tests..."
+	$(GO) test ./...
+	@echo "Tests completed."
