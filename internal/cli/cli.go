@@ -10,6 +10,9 @@ type cli struct {
 }
 
 func (c *cli) run(args []string) int {
-	fmt.Fprintf(c.outWriter, "")
+	if len(args) < 1 {
+		fmt.Fprintln(c.errWriter, "usage: mdp <markdown-file>")
+		return 1
+	}
 	return 0
 }
