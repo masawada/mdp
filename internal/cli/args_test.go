@@ -43,6 +43,21 @@ func TestParseArgs(t *testing.T) {
 			args:       []string{"--config", "/path/to/config.yaml"},
 			wantErrMsg: "markdown file is required",
 		},
+		{
+			name:       "help flag long form",
+			args:       []string{"--help"},
+			wantErrMsg: "help requested",
+		},
+		{
+			name:       "help flag short form",
+			args:       []string{"-h"},
+			wantErrMsg: "help requested",
+		},
+		{
+			name:       "help flag with file",
+			args:       []string{"--help", "test.md"},
+			wantErrMsg: "help requested",
+		},
 	}
 
 	for _, tt := range tests {
