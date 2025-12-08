@@ -8,8 +8,8 @@ import (
 
 	"github.com/masawada/mdp/internal/browser"
 	"github.com/masawada/mdp/internal/config"
-	"github.com/masawada/mdp/internal/converter"
 	"github.com/masawada/mdp/internal/output"
+	"github.com/masawada/mdp/internal/renderer"
 )
 
 type cli struct {
@@ -35,15 +35,21 @@ func (c *cli) run(filePath string) int {
 		return 1
 	}
 
+	r, err := renderer.NewRenderer(cfg.ConfigDir, cfg.Theme)
+	if err != nil {
+		fmt.Fprintf(c.errWriter, "error: failed to initialize renderer: %v\n", err)
+		return 1
+	}
+
 	markdown, err := os.ReadFile(absPath)
 	if err != nil {
 		fmt.Fprintf(c.errWriter, "error: failed to read file: %v\n", err)
 		return 1
 	}
 
-	html, err := converter.Convert(markdown)
+	html, err := r.Render(markdown)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to convert markdown: %v\n", err)
+		fmt.Fprintf(c.errWriter, "error: failed to render: %v\n", err)
 		return 1
 	}
 
