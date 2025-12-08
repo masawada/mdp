@@ -158,4 +158,61 @@ func TestLoad(t *testing.T) {
 			t.Error("Load() should return error for invalid yaml")
 		}
 	})
+
+	t.Run("theme field is loaded correctly", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("theme: my-theme\n")
+		os.WriteFile(configFile, content, 0644)
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.Theme != "my-theme" {
+			t.Errorf("Theme = %q, want %q", cfg.Theme, "my-theme")
+		}
+	})
+
+	t.Run("theme field defaults to empty string when omitted", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("output_dir: /custom/output\n")
+		os.WriteFile(configFile, content, 0644)
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.Theme != "" {
+			t.Errorf("Theme = %q, want empty string", cfg.Theme)
+		}
+	})
+
+	t.Run("configDir is set to config file directory", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("output_dir: /custom/output\n")
+		os.WriteFile(configFile, content, 0644)
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.ConfigDir != tmpDir {
+			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, tmpDir)
+		}
+	})
+
+	t.Run("configDir is set to default config directory when path is empty", func(t *testing.T) {
+		cfg, err := Load("")
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		configDir, _ := os.UserConfigDir()
+		expected := filepath.Join(configDir, "mdp")
+		if cfg.ConfigDir != expected {
+			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, expected)
+		}
+	})
 }
