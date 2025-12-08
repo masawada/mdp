@@ -28,10 +28,25 @@ for md_file in "$TESTDATA_DIR"/*.md; do
 
     config_file="$tmpdir/config.yaml"
     output_dir="$tmpdir/output"
-    cat > "$config_file" <<EOF
+
+    # Check if theme file exists for this test
+    theme_file="$TESTDATA_DIR/$name.theme.html"
+    if [[ -f "$theme_file" ]]; then
+        # Setup theme
+        themes_dir="$tmpdir/themes"
+        mkdir -p "$themes_dir"
+        cp "$theme_file" "$themes_dir/test-theme.html"
+        cat > "$config_file" <<EOF
+output_dir: $output_dir
+browser_command: echo
+theme: test-theme
+EOF
+    else
+        cat > "$config_file" <<EOF
 output_dir: $output_dir
 browser_command: echo
 EOF
+    fi
 
     abs_md_path=$(cd "$(dirname "$md_file")" && pwd)/$(basename "$md_file")
 
