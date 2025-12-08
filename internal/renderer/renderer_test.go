@@ -1,0 +1,130 @@
+package renderer
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestNewRenderer(t *testing.T) {
+	t.Run("returns renderer without template when themeName is empty", func(t *testing.T) {
+		r, err := NewRenderer("", "")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+		if r == nil {
+			t.Fatal("NewRenderer() returned nil")
+		}
+	})
+
+	t.Run("returns renderer with template when theme file exists", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		themesDir := filepath.Join(tmpDir, "themes")
+		os.MkdirAll(themesDir, 0755)
+		themeFile := filepath.Join(themesDir, "test-theme.html")
+		os.WriteFile(themeFile, []byte("<html>{{.Content}}</html>"), 0644)
+
+		r, err := NewRenderer(tmpDir, "test-theme")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+		if r == nil {
+			t.Fatal("NewRenderer() returned nil")
+		}
+	})
+
+	t.Run("returns error when theme file does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		_, err := NewRenderer(tmpDir, "nonexistent-theme")
+		if err == nil {
+			t.Error("NewRenderer() should return error when theme file does not exist")
+		}
+	})
+
+	t.Run("returns error when template is invalid", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		themesDir := filepath.Join(tmpDir, "themes")
+		os.MkdirAll(themesDir, 0755)
+		themeFile := filepath.Join(themesDir, "invalid-theme.html")
+		os.WriteFile(themeFile, []byte("<html>{{.Invalid}</html>"), 0644)
+
+		_, err := NewRenderer(tmpDir, "invalid-theme")
+		if err == nil {
+			t.Error("NewRenderer() should return error when template is invalid")
+		}
+	})
+}
+
+func TestRender(t *testing.T) {
+	t.Run("converts markdown to html without theme", func(t *testing.T) {
+		r, err := NewRenderer("", "")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("# Hello"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		expected := "<h1>Hello</h1>"
+		if !strings.Contains(string(html), expected) {
+			t.Errorf("Render() = %q, want to contain %q", string(html), expected)
+		}
+	})
+
+	t.Run("applies theme template when theme is set", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		themesDir := filepath.Join(tmpDir, "themes")
+		os.MkdirAll(themesDir, 0755)
+		themeFile := filepath.Join(themesDir, "test-theme.html")
+		os.WriteFile(themeFile, []byte("<!DOCTYPE html><html><body>{{.Content}}</body></html>"), 0644)
+
+		r, err := NewRenderer(tmpDir, "test-theme")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("# Hello"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, "<!DOCTYPE html>") {
+			t.Errorf("Render() should contain DOCTYPE, got %q", result)
+		}
+		if !strings.Contains(result, "<h1>Hello</h1>") {
+			t.Errorf("Render() should contain converted markdown, got %q", result)
+		}
+	})
+
+	t.Run("does not escape html tags in content", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		themesDir := filepath.Join(tmpDir, "themes")
+		os.MkdirAll(themesDir, 0755)
+		themeFile := filepath.Join(themesDir, "test-theme.html")
+		os.WriteFile(themeFile, []byte("<div>{{.Content}}</div>"), 0644)
+
+		r, err := NewRenderer(tmpDir, "test-theme")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("**bold**"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		// HTMLタグがエスケープされていないことを確認
+		if strings.Contains(result, "&lt;strong&gt;") {
+			t.Errorf("Render() should not escape HTML tags, got %q", result)
+		}
+		if !strings.Contains(result, "<strong>bold</strong>") {
+			t.Errorf("Render() should contain unescaped HTML tags, got %q", result)
+		}
+	})
+}
