@@ -77,6 +77,32 @@ func TestDefaultBrowserCommand(t *testing.T) {
 	})
 }
 
+func TestConfigPathCandidates(t *testing.T) {
+	t.Run("returns 4 candidate paths in correct order", func(t *testing.T) {
+		configDir, _ := os.UserConfigDir()
+		homeDir, _ := os.UserHomeDir()
+
+		candidates := configPathCandidates()
+
+		expected := []string{
+			filepath.Join(configDir, "mdp", "config.yaml"),
+			filepath.Join(configDir, "mdp", "config.yml"),
+			filepath.Join(homeDir, ".config", "mdp", "config.yaml"),
+			filepath.Join(homeDir, ".config", "mdp", "config.yml"),
+		}
+
+		if len(candidates) != len(expected) {
+			t.Fatalf("configPathCandidates() returned %d candidates, want %d", len(candidates), len(expected))
+		}
+
+		for i, path := range candidates {
+			if path != expected[i] {
+				t.Errorf("configPathCandidates()[%d] = %q, want %q", i, path, expected[i])
+			}
+		}
+	})
+}
+
 func TestConfigPath(t *testing.T) {
 	t.Run("returns UserConfigDir/mdp/config.yaml", func(t *testing.T) {
 		configDir, _ := os.UserConfigDir()

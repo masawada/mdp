@@ -45,6 +45,24 @@ func configPath() string {
 	return filepath.Join(configDir, "mdp", "config.yaml")
 }
 
+func configPathCandidates() []string {
+	var candidates []string
+
+	if configDir, err := userConfigDir(); err == nil {
+		dir := filepath.Join(configDir, "mdp")
+		candidates = append(candidates, filepath.Join(dir, "config.yaml"))
+		candidates = append(candidates, filepath.Join(dir, "config.yml"))
+	}
+
+	if homeDir, err := userHomeDir(); err == nil {
+		dir := filepath.Join(homeDir, ".config", "mdp")
+		candidates = append(candidates, filepath.Join(dir, "config.yaml"))
+		candidates = append(candidates, filepath.Join(dir, "config.yml"))
+	}
+
+	return candidates
+}
+
 // Config holds the application configuration.
 type Config struct {
 	OutputDir      string `yaml:"output_dir"`
