@@ -37,14 +37,6 @@ func DefaultBrowserCommand() string {
 	}
 }
 
-func configPath() string {
-	configDir, err := userConfigDir()
-	if err != nil {
-		panic(err)
-	}
-	return filepath.Join(configDir, "mdp", "config.yaml")
-}
-
 func configPathCandidates() []string {
 	var candidates []string
 
@@ -88,7 +80,12 @@ func Load(path string) (*Config, error) {
 	}
 
 	if path == "" {
-		path = configPath()
+		path = resolveConfigPath()
+		if path == "" {
+			// No config file found, use default ConfigDir
+			cfg.ConfigDir = filepath.Dir(configPathCandidates()[0])
+			return cfg, nil
+		}
 	}
 
 	cfg.ConfigDir = filepath.Dir(path)
