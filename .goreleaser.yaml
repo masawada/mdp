@@ -46,4 +46,4 @@ release:
   github:
     owner: masawada
     name: mdp
-  use_existing_tag: true
+  use_existing_draft: true
