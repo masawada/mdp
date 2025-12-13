@@ -7,12 +7,16 @@ import (
 	"io"
 )
 
+// version is set via ldflags at build time.
+var version = "dev"
+
 var errHelp = errors.New("help requested")
 
 type parsedArgs struct {
-	configPath string
-	filePath   string
-	showList   bool
+	configPath  string
+	filePath    string
+	showList    bool
+	showVersion bool
 }
 
 func parseArgs(args []string) (*parsedArgs, error) {
@@ -22,6 +26,7 @@ func parseArgs(args []string) (*parsedArgs, error) {
 	configPath := fs.String("config", "", "path to config file")
 	showHelp := fs.Bool("help", false, "show help message")
 	showList := fs.Bool("list", false, "list generated files")
+	showVersion := fs.Bool("version", false, "show version")
 
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -32,6 +37,12 @@ func parseArgs(args []string) (*parsedArgs, error) {
 
 	if *showHelp {
 		return nil, errHelp
+	}
+
+	if *showVersion {
+		return &parsedArgs{
+			showVersion: true,
+		}, nil
 	}
 
 	if *showList {
