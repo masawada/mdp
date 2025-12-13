@@ -3,7 +3,7 @@ GO := go
 GOFLAGS :=
 MAIN_PATH := ./cmd/mdp/main.go
 
-.PHONY: all build test e2e-test
+.PHONY: all build test e2e-test lint
 
 all: build
 
@@ -21,3 +21,8 @@ e2e-test: build
 	@echo "Running e2e tests..."
 	./e2e/run.sh
 	@echo "E2E tests completed."
+
+lint:
+	@echo "Running linter..."
+	golangci-lint run
+	@echo "Lint completed."
