@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  default: all
+  disable:
+    - depguard
+    - wsl
+    - wsl_v5
+    - paralleltest
+    - nlreturn
+    - perfsprint
+    - noinlineerr
+    - tagliatelle
+    - varnamelen
+    - testpackage
+    - exhaustruct
+    - gochecknoglobals
+    - err113
+    - wrapcheck
+    - mnd
+    - noctx
+  exclusions:
+    rules:
+      - path: '(.+)_test\.go'
+        linters:
+          - cyclop
+          - gocognit
+          - funlen
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/masawada/mdp
