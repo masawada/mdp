@@ -28,9 +28,11 @@ linters:
     rules:
       - path: '(.+)_test\.go'
         linters:
+          - gocyclo
           - cyclop
           - gocognit
           - funlen
+          - maintidx
 
 formatters:
   enable:
