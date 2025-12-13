@@ -12,6 +12,7 @@ Options:
   --config <config-file>  path to config file
   --help                  show this help message`
 
+// Run executes the mdp command and returns the exit code.
 func Run() int {
 	args, err := parseArgs(os.Args[1:])
 	if err != nil {

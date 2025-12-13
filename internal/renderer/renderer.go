@@ -1,3 +1,4 @@
+// Package renderer converts Markdown to HTML with optional theming.
 package renderer
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 )
 
+// Renderer converts Markdown to HTML using an optional theme template.
 type Renderer struct {
 	tmpl *template.Template
 }
@@ -18,6 +20,7 @@ type templateData struct {
 	Content template.HTML
 }
 
+// NewRenderer creates a new Renderer with the specified theme.
 func NewRenderer(configDir string, themeName string) (*Renderer, error) {
 	if themeName == "" {
 		return &Renderer{tmpl: nil}, nil
@@ -37,6 +40,7 @@ func NewRenderer(configDir string, themeName string) (*Renderer, error) {
 	return &Renderer{tmpl: tmpl}, nil
 }
 
+// Render converts Markdown to HTML, applying the theme template if configured.
 func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	md := goldmark.New(

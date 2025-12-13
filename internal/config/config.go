@@ -1,3 +1,4 @@
+// Package config handles configuration loading and defaults.
 package config
 
 import (
@@ -15,6 +16,7 @@ var userHomeDir = os.UserHomeDir
 var userConfigDir = os.UserConfigDir
 var goos = runtime.GOOS
 
+// DefaultOutputDir returns the default output directory path.
 func DefaultOutputDir() string {
 	homeDir, err := userHomeDir()
 	if err != nil {
@@ -23,6 +25,7 @@ func DefaultOutputDir() string {
 	return filepath.Join(homeDir, ".mdp")
 }
 
+// DefaultBrowserCommand returns the default browser command for the current OS.
 func DefaultBrowserCommand() string {
 	switch goos {
 	case "darwin":
@@ -42,6 +45,7 @@ func configPath() string {
 	return filepath.Join(configDir, "mdp", "config.yaml")
 }
 
+// Config holds the application configuration.
 type Config struct {
 	OutputDir      string `yaml:"output_dir"`
 	BrowserCommand string `yaml:"browser_command"`
@@ -49,6 +53,7 @@ type Config struct {
 	ConfigDir      string `yaml:"-"`
 }
 
+// Load loads the configuration from the specified path or the default location.
 func Load(path string) (*Config, error) {
 	cfg := &Config{
 		OutputDir:      DefaultOutputDir(),
