@@ -19,52 +19,52 @@ type cli struct {
 
 func (c *cli) run(filePath string) int {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		fmt.Fprintf(c.errWriter, "error: file not found: %s\n", filePath)
+		_, _ = fmt.Fprintf(c.errWriter, "error: file not found: %s\n", filePath)
 		return 1
 	}
 
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: %v\n", err)
 		return 1
 	}
 
 	cfg, err := config.Load(c.configPath)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to load config: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to load config: %v\n", err)
 		return 1
 	}
 
 	r, err := renderer.NewRenderer(cfg.ConfigDir, cfg.Theme)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to initialize renderer: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to initialize renderer: %v\n", err)
 		return 1
 	}
 
 	markdown, err := os.ReadFile(absPath)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to read file: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to read file: %v\n", err)
 		return 1
 	}
 
 	html, err := r.Render(markdown)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to render: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to render: %v\n", err)
 		return 1
 	}
 
 	writer := output.NewWriter(cfg.OutputDir)
 	outputPath, err := writer.Write(absPath, html)
 	if err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to write html: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to write html: %v\n", err)
 		return 1
 	}
 
-	fmt.Fprintf(c.outWriter, "Generated: %s\n", outputPath)
+	_, _ = fmt.Fprintf(c.outWriter, "Generated: %s\n", outputPath)
 
 	opener := browser.NewOpener(cfg.BrowserCommand)
 	if err := opener.Open(outputPath); err != nil {
-		fmt.Fprintf(c.errWriter, "error: failed to open browser: %v\n", err)
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to open browser: %v\n", err)
 		return 1
 	}
 

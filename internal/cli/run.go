@@ -16,11 +16,11 @@ func Run() int {
 	args, err := parseArgs(os.Args[1:])
 	if err != nil {
 		if errors.Is(err, errHelp) {
-			fmt.Fprintln(os.Stdout, usageMessage)
+			_, _ = fmt.Fprintln(os.Stdout, usageMessage)
 			return 0
 		}
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		fmt.Fprintln(os.Stderr, "usage: mdp [--config <config-file>] [--help] <markdown-file>")
+		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		_, _ = fmt.Fprintln(os.Stderr, "usage: mdp [--config <config-file>] [--help] <markdown-file>")
 		return 1
 	}
 
