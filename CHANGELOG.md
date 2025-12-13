@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.1](https://github.com/masawada/mdp/compare/v0.1.0...v0.1.1) - 2025-12-13
+- Fix goreleaser config option typo by @masawada in https://github.com/masawada/mdp/pull/7
+
 ## [v0.1.0](https://github.com/masawada/mdp/commits/v0.1.0) - 2025-12-13
 - Add --list option to display generated files by @masawada in https://github.com/masawada/mdp/pull/1
 - Add `make lint` target for golangci-lint by @masawada in https://github.com/masawada/mdp/pull/2
