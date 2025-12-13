@@ -63,6 +63,15 @@ func configPathCandidates() []string {
 	return candidates
 }
 
+func resolveConfigPath() string {
+	for _, path := range configPathCandidates() {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return ""
+}
+
 // Config holds the application configuration.
 type Config struct {
 	OutputDir      string `yaml:"output_dir"`
