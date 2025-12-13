@@ -53,7 +53,7 @@ func TestWrite(t *testing.T) {
 		t.Errorf("Write() returned path = %q, want %q", outputPath, expectedPath)
 	}
 
-	content, err := os.ReadFile(outputPath)
+	content, err := os.ReadFile(outputPath) //nolint:gosec // G304: path is from test
 	if err != nil {
 		t.Fatalf("Failed to read output file: %v", err)
 	}

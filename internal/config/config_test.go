@@ -133,7 +133,7 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\nbrowser_command: firefox\n")
-		if err := os.WriteFile(configFile, content, 0644); err != nil {
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
 			t.Fatal(err)
 		}
 
@@ -153,7 +153,7 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("invalid: yaml: content:\n")
-		if err := os.WriteFile(configFile, content, 0644); err != nil {
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
 			t.Fatal(err)
 		}
 
@@ -167,7 +167,7 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("theme: my-theme\n")
-		if err := os.WriteFile(configFile, content, 0644); err != nil {
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
 			t.Fatal(err)
 		}
 
@@ -184,7 +184,7 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\n")
-		if err := os.WriteFile(configFile, content, 0644); err != nil {
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
 			t.Fatal(err)
 		}
 
@@ -201,7 +201,7 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\n")
-		if err := os.WriteFile(configFile, content, 0644); err != nil {
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
 			t.Fatal(err)
 		}
 

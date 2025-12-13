@@ -29,11 +29,11 @@ func (w *Writer) Write(srcPath string, html []byte) (string, error) {
 	outputPath := w.BuildOutputPath(srcPath)
 
 	dir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0755); err != nil { //nolint:gosec // G301: need world-readable for browser
 		return "", err
 	}
 
-	if err := os.WriteFile(outputPath, html, 0644); err != nil {
+	if err := os.WriteFile(outputPath, html, 0644); err != nil { //nolint:gosec // G306: need world-readable for browser
 		return "", err
 	}
 

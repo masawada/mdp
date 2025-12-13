@@ -66,7 +66,7 @@ func Load(path string) (*Config, error) {
 
 	cfg.ConfigDir = filepath.Dir(path)
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is user-specified config file
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return cfg, nil

@@ -15,6 +15,6 @@ func NewOpener(command string) *Opener {
 
 // Open opens the specified file in the browser.
 func (o *Opener) Open(filePath string) error {
-	cmd := exec.Command(o.command, filePath)
+	cmd := exec.Command(o.command, filePath) //nolint:gosec // G204: command is from trusted config
 	return cmd.Run()
 }

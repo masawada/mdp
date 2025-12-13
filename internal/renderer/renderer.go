@@ -27,7 +27,7 @@ func NewRenderer(configDir string, themeName string) (*Renderer, error) {
 	}
 
 	themePath := filepath.Join(configDir, "themes", themeName+".html")
-	content, err := os.ReadFile(themePath)
+	content, err := os.ReadFile(themePath) //nolint:gosec // G304: theme path is from trusted config
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 	}
 
 	var out bytes.Buffer
-	data := templateData{Content: template.HTML(html)}
+	data := templateData{Content: template.HTML(html)} //nolint:gosec // G203: HTML from markdown conversion is intentional
 	if err := r.tmpl.Execute(&out, data); err != nil {
 		return nil, err
 	}

@@ -41,7 +41,7 @@ func (c *cli) run(filePath string) int {
 		return 1
 	}
 
-	markdown, err := os.ReadFile(absPath)
+	markdown, err := os.ReadFile(absPath) //nolint:gosec // G304: path is user-specified input file
 	if err != nil {
 		_, _ = fmt.Fprintf(c.errWriter, "error: failed to read file: %v\n", err)
 		return 1

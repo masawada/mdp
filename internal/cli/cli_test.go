@@ -28,7 +28,7 @@ func TestRun_FileNotFound(t *testing.T) {
 func TestRun_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	mdFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil {
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
 		t.Fatal(err)
 	}
 
@@ -36,7 +36,7 @@ func TestRun_Success(t *testing.T) {
 
 	configFile := filepath.Join(tmpDir, "config.yaml")
 	configContent := fmt.Sprintf("output_dir: %s\nbrowser_command: echo\n", outputDir)
-	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil { //nolint:gosec // G306: test file
 		t.Fatal(err)
 	}
 
