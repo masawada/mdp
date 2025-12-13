@@ -21,6 +21,7 @@ mdp [options] <markdown-file>
 
 ```
 --config <config-file>  path to config file
+--list                  list generated files
 --help                  show help message
 ```
 
