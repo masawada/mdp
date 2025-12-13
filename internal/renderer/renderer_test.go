@@ -21,9 +21,13 @@ func TestNewRenderer(t *testing.T) {
 	t.Run("returns renderer with template when theme file exists", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		themesDir := filepath.Join(tmpDir, "themes")
-		os.MkdirAll(themesDir, 0755)
+		if err := os.MkdirAll(themesDir, 0755); err != nil {
+			t.Fatal(err)
+		}
 		themeFile := filepath.Join(themesDir, "test-theme.html")
-		os.WriteFile(themeFile, []byte("<html>{{.Content}}</html>"), 0644)
+		if err := os.WriteFile(themeFile, []byte("<html>{{.Content}}</html>"), 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		r, err := NewRenderer(tmpDir, "test-theme")
 		if err != nil {
@@ -46,9 +50,13 @@ func TestNewRenderer(t *testing.T) {
 	t.Run("returns error when template is invalid", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		themesDir := filepath.Join(tmpDir, "themes")
-		os.MkdirAll(themesDir, 0755)
+		if err := os.MkdirAll(themesDir, 0755); err != nil {
+			t.Fatal(err)
+		}
 		themeFile := filepath.Join(themesDir, "invalid-theme.html")
-		os.WriteFile(themeFile, []byte("<html>{{.Invalid}</html>"), 0644)
+		if err := os.WriteFile(themeFile, []byte("<html>{{.Invalid}</html>"), 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		_, err := NewRenderer(tmpDir, "invalid-theme")
 		if err == nil {
@@ -78,9 +86,13 @@ func TestRender(t *testing.T) {
 	t.Run("applies theme template when theme is set", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		themesDir := filepath.Join(tmpDir, "themes")
-		os.MkdirAll(themesDir, 0755)
+		if err := os.MkdirAll(themesDir, 0755); err != nil {
+			t.Fatal(err)
+		}
 		themeFile := filepath.Join(themesDir, "test-theme.html")
-		os.WriteFile(themeFile, []byte("<!DOCTYPE html><html><body>{{.Content}}</body></html>"), 0644)
+		if err := os.WriteFile(themeFile, []byte("<!DOCTYPE html><html><body>{{.Content}}</body></html>"), 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		r, err := NewRenderer(tmpDir, "test-theme")
 		if err != nil {
@@ -104,9 +116,13 @@ func TestRender(t *testing.T) {
 	t.Run("does not escape html tags in content", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		themesDir := filepath.Join(tmpDir, "themes")
-		os.MkdirAll(themesDir, 0755)
+		if err := os.MkdirAll(themesDir, 0755); err != nil {
+			t.Fatal(err)
+		}
 		themeFile := filepath.Join(themesDir, "test-theme.html")
-		os.WriteFile(themeFile, []byte("<div>{{.Content}}</div>"), 0644)
+		if err := os.WriteFile(themeFile, []byte("<div>{{.Content}}</div>"), 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		r, err := NewRenderer(tmpDir, "test-theme")
 		if err != nil {

@@ -28,13 +28,17 @@ func TestRun_FileNotFound(t *testing.T) {
 func TestRun_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	mdFile := filepath.Join(tmpDir, "test.md")
-	os.WriteFile(mdFile, []byte("# Hello"), 0644)
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	outputDir := filepath.Join(tmpDir, "output")
 
 	configFile := filepath.Join(tmpDir, "config.yaml")
 	configContent := fmt.Sprintf("output_dir: %s\nbrowser_command: echo\n", outputDir)
-	os.WriteFile(configFile, []byte(configContent), 0644)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	var stdout, stderr bytes.Buffer
 	c := &cli{

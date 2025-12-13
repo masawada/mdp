@@ -133,7 +133,9 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\nbrowser_command: firefox\n")
-		os.WriteFile(configFile, content, 0644)
+		if err := os.WriteFile(configFile, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		cfg, err := Load(configFile)
 		if err != nil {
@@ -151,7 +153,9 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("invalid: yaml: content:\n")
-		os.WriteFile(configFile, content, 0644)
+		if err := os.WriteFile(configFile, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		_, err := Load(configFile)
 		if err == nil {
@@ -163,7 +167,9 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("theme: my-theme\n")
-		os.WriteFile(configFile, content, 0644)
+		if err := os.WriteFile(configFile, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		cfg, err := Load(configFile)
 		if err != nil {
@@ -178,7 +184,9 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\n")
-		os.WriteFile(configFile, content, 0644)
+		if err := os.WriteFile(configFile, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		cfg, err := Load(configFile)
 		if err != nil {
@@ -193,7 +201,9 @@ func TestLoad(t *testing.T) {
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, "config.yaml")
 		content := []byte("output_dir: /custom/output\n")
-		os.WriteFile(configFile, content, 0644)
+		if err := os.WriteFile(configFile, content, 0644); err != nil {
+			t.Fatal(err)
+		}
 
 		cfg, err := Load(configFile)
 		if err != nil {
