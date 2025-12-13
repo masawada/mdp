@@ -60,3 +60,93 @@ func TestRun_Success(t *testing.T) {
 		t.Errorf("HTML file not created at %s", expectedHTML)
 	}
 }
+
+func TestListFiles_WithFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputDir := filepath.Join(tmpDir, "output")
+
+	// Create test files
+	dir1 := filepath.Join(outputDir, "path/to/file1")
+	if err := os.MkdirAll(dir1, 0755); err != nil { //nolint:gosec // G301: test directory
+		t.Fatal(err)
+	}
+	file1 := filepath.Join(dir1, "index.html")
+	if err := os.WriteFile(file1, []byte("<h1>Test</h1>"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+
+	configFile := filepath.Join(tmpDir, "config.yaml")
+	configContent := fmt.Sprintf("output_dir: %s\n", outputDir)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter:  &stdout,
+		errWriter:  &stderr,
+		configPath: configFile,
+	}
+
+	exitCode := c.listFiles()
+	if exitCode != 0 {
+		t.Errorf("listFiles() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), file1) {
+		t.Errorf("stdout should contain file path, got: %s", stdout.String())
+	}
+}
+
+func TestListFiles_NoFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputDir := filepath.Join(tmpDir, "output")
+	if err := os.MkdirAll(outputDir, 0755); err != nil { //nolint:gosec // G301: test directory
+		t.Fatal(err)
+	}
+
+	configFile := filepath.Join(tmpDir, "config.yaml")
+	configContent := fmt.Sprintf("output_dir: %s\n", outputDir)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter:  &stdout,
+		errWriter:  &stderr,
+		configPath: configFile,
+	}
+
+	exitCode := c.listFiles()
+	if exitCode != 0 {
+		t.Errorf("listFiles() exit code = %d, want 0", exitCode)
+	}
+	if stdout.String() != "" {
+		t.Errorf("stdout should be empty, got: %s", stdout.String())
+	}
+}
+
+func TestListFiles_DirectoryNotExist(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	configFile := filepath.Join(tmpDir, "config.yaml")
+	configContent := "output_dir: /nonexistent/directory\n"
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter:  &stdout,
+		errWriter:  &stderr,
+		configPath: configFile,
+	}
+
+	exitCode := c.listFiles()
+	if exitCode != 1 {
+		t.Errorf("listFiles() exit code = %d, want 1", exitCode)
+	}
+	if !strings.Contains(stderr.String(), "output directory does not exist") {
+		t.Errorf("stderr should contain error message, got: %s", stderr.String())
+	}
+}

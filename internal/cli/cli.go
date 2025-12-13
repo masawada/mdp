@@ -70,3 +70,23 @@ func (c *cli) run(filePath string) int {
 
 	return 0
 }
+
+func (c *cli) listFiles() int {
+	cfg, err := config.Load(c.configPath)
+	if err != nil {
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to load config: %v\n", err)
+		return 1
+	}
+
+	files, err := output.ListFiles(cfg.OutputDir)
+	if err != nil {
+		_, _ = fmt.Fprintf(c.errWriter, "error: %v\n", err)
+		return 1
+	}
+
+	for _, file := range files {
+		_, _ = fmt.Fprintln(c.outWriter, file)
+	}
+
+	return 0
+}

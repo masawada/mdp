@@ -12,6 +12,7 @@ var errHelp = errors.New("help requested")
 type parsedArgs struct {
 	configPath string
 	filePath   string
+	showList   bool
 }
 
 func parseArgs(args []string) (*parsedArgs, error) {
@@ -20,6 +21,7 @@ func parseArgs(args []string) (*parsedArgs, error) {
 
 	configPath := fs.String("config", "", "path to config file")
 	showHelp := fs.Bool("help", false, "show help message")
+	showList := fs.Bool("list", false, "list generated files")
 
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -30,6 +32,13 @@ func parseArgs(args []string) (*parsedArgs, error) {
 
 	if *showHelp {
 		return nil, errHelp
+	}
+
+	if *showList {
+		return &parsedArgs{
+			configPath: *configPath,
+			showList:   true,
+		}, nil
 	}
 
 	if fs.NArg() == 0 {

@@ -3,6 +3,7 @@ package output
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 )
 
@@ -59,5 +60,66 @@ func TestWrite(t *testing.T) {
 	}
 	if string(content) != string(htmlContent) {
 		t.Errorf("File content = %q, want %q", content, htmlContent)
+	}
+}
+
+func TestListFiles_DirectoryNotExist(t *testing.T) {
+	_, err := ListFiles("/non/existent/directory")
+	if err == nil {
+		t.Error("ListFiles() expected error for non-existent directory, got nil")
+	}
+}
+
+func TestListFiles_EmptyDirectory(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	files, err := ListFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("ListFiles() error: %v", err)
+	}
+	if len(files) != 0 {
+		t.Errorf("ListFiles() returned %d files, want 0", len(files))
+	}
+}
+
+func TestListFiles_WithFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create test files
+	dir1 := filepath.Join(tmpDir, "path/to/file1")
+	dir2 := filepath.Join(tmpDir, "path/to/file2")
+	if err := os.MkdirAll(dir1, 0755); err != nil { //nolint:gosec // G301: test directory
+		t.Fatalf("Failed to create dir: %v", err)
+	}
+	if err := os.MkdirAll(dir2, 0755); err != nil { //nolint:gosec // G301: test directory
+		t.Fatalf("Failed to create dir: %v", err)
+	}
+
+	file1 := filepath.Join(dir1, "index.html")
+	file2 := filepath.Join(dir2, "index.html")
+	if err := os.WriteFile(file1, []byte("<h1>Test1</h1>"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatalf("Failed to write file: %v", err)
+	}
+	if err := os.WriteFile(file2, []byte("<h1>Test2</h1>"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatalf("Failed to write file: %v", err)
+	}
+
+	files, err := ListFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("ListFiles() error: %v", err)
+	}
+	if len(files) != 2 {
+		t.Errorf("ListFiles() returned %d files, want 2", len(files))
+	}
+
+	// Sort for consistent comparison
+	sort.Strings(files)
+	expected := []string{file1, file2}
+	sort.Strings(expected)
+
+	for i, f := range files {
+		if f != expected[i] {
+			t.Errorf("ListFiles()[%d] = %q, want %q", i, f, expected[i])
+		}
 	}
 }

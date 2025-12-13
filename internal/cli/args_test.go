@@ -58,6 +58,26 @@ func TestParseArgs(t *testing.T) {
 			args:       []string{"--help", "test.md"},
 			wantErrMsg: "help requested",
 		},
+		{
+			name: "list flag",
+			args: []string{"--list"},
+			wantArgs: &parsedArgs{
+				showList: true,
+			},
+		},
+		{
+			name: "list flag with config",
+			args: []string{"--config", "/path/to/config.yaml", "--list"},
+			wantArgs: &parsedArgs{
+				configPath: "/path/to/config.yaml",
+				showList:   true,
+			},
+		},
+		{
+			name:       "help and list flags together",
+			args:       []string{"--help", "--list"},
+			wantErrMsg: "help requested",
+		},
 	}
 
 	for _, tt := range tests {
@@ -82,6 +102,9 @@ func TestParseArgs(t *testing.T) {
 			}
 			if got.filePath != tt.wantArgs.filePath {
 				t.Errorf("parseArgs() filePath = %v, want %v", got.filePath, tt.wantArgs.filePath)
+			}
+			if got.showList != tt.wantArgs.showList {
+				t.Errorf("parseArgs() showList = %v, want %v", got.showList, tt.wantArgs.showList)
 			}
 		})
 	}
