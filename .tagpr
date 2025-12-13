@@ -1,5 +1,5 @@
 [tagpr]
-  vPrefix = true
-  releaseBranch = main
-  release = draft
+	vPrefix = true
+	releaseBranch = main
+	release = draft
 	versionFile = -
