@@ -10,6 +10,7 @@ const usageMessage = `usage: mdp [options] <markdown-file>
 
 Options:
   --config <config-file>  path to config file
+  --list                  list generated files
   --help                  show this help message`
 
 // Run executes the mdp command and returns the exit code.
@@ -25,9 +26,15 @@ func Run() int {
 		return 1
 	}
 
-	return (&cli{
+	c := &cli{
 		outWriter:  os.Stdout,
 		errWriter:  os.Stderr,
 		configPath: args.configPath,
-	}).run(args.filePath)
+	}
+
+	if args.showList {
+		return c.listFiles()
+	}
+
+	return c.run(args.filePath)
 }
