@@ -68,3 +68,23 @@ func TestWatchFileChange(t *testing.T) {
 		t.Fatal("timeout waiting for event")
 	}
 }
+
+func TestClose(t *testing.T) {
+	// Create a temporary file
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "test.md")
+	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create watcher
+	w, err := New(tmpFile)
+	if err != nil {
+		t.Fatalf("New() returned error: %v", err)
+	}
+
+	// Close should not return error
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close() returned error: %v", err)
+	}
+}
