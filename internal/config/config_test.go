@@ -77,31 +77,123 @@ func TestDefaultBrowserCommand(t *testing.T) {
 	})
 }
 
-func TestConfigPath(t *testing.T) {
-	t.Run("returns UserConfigDir/mdp/config.yaml", func(t *testing.T) {
+func TestConfigPathCandidates(t *testing.T) {
+	t.Run("returns 4 candidate paths in correct order", func(t *testing.T) {
 		configDir, _ := os.UserConfigDir()
-		expected := filepath.Join(configDir, "mdp", "config.yaml")
-		actual := configPath()
-		if actual != expected {
-			t.Errorf("configPath() = %q, want %q", actual, expected)
+		homeDir, _ := os.UserHomeDir()
+
+		candidates := configPathCandidates()
+
+		expected := []string{
+			filepath.Join(configDir, "mdp", "config.yaml"),
+			filepath.Join(configDir, "mdp", "config.yml"),
+			filepath.Join(homeDir, ".config", "mdp", "config.yaml"),
+			filepath.Join(homeDir, ".config", "mdp", "config.yml"),
+		}
+
+		if len(candidates) != len(expected) {
+			t.Fatalf("configPathCandidates() returned %d candidates, want %d", len(candidates), len(expected))
+		}
+
+		for i, path := range candidates {
+			if path != expected[i] {
+				t.Errorf("configPathCandidates()[%d] = %q, want %q", i, path, expected[i])
+			}
+		}
+	})
+}
+
+func TestResolveConfigPath(t *testing.T) {
+	t.Run("returns first candidate (config.yaml) when it exists", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		originalConfigDir := userConfigDir
+		defer func() { userConfigDir = originalConfigDir }()
+		userConfigDir = func() (string, error) { return tmpDir, nil }
+
+		configDir := filepath.Join(tmpDir, "mdp")
+		if err := os.MkdirAll(configDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		configFile := filepath.Join(configDir, "config.yaml")
+		if err := os.WriteFile(configFile, []byte(""), 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		result := resolveConfigPath()
+		if result != configFile {
+			t.Errorf("resolveConfigPath() = %q, want %q", result, configFile)
 		}
 	})
 
-	t.Run("panics when UserConfigDir fails", func(t *testing.T) {
-		original := userConfigDir
-		defer func() { userConfigDir = original }()
+	t.Run("returns config.yml when config.yaml does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
 
-		userConfigDir = func() (string, error) {
-			return "", errors.New("UserConfigDir not available")
+		originalConfigDir := userConfigDir
+		defer func() { userConfigDir = originalConfigDir }()
+		userConfigDir = func() (string, error) { return tmpDir, nil }
+
+		configDir := filepath.Join(tmpDir, "mdp")
+		if err := os.MkdirAll(configDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		configFile := filepath.Join(configDir, "config.yml")
+		if err := os.WriteFile(configFile, []byte(""), 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
 		}
 
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("configPath() should panic when UserConfigDir fails")
-			}
-		}()
+		result := resolveConfigPath()
+		if result != configFile {
+			t.Errorf("resolveConfigPath() = %q, want %q", result, configFile)
+		}
+	})
 
-		configPath()
+	t.Run("returns fallback path when primary does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		primaryDir := filepath.Join(tmpDir, "primary")
+		fallbackDir := filepath.Join(tmpDir, "fallback")
+
+		originalConfigDir := userConfigDir
+		originalHomeDir := userHomeDir
+		defer func() {
+			userConfigDir = originalConfigDir
+			userHomeDir = originalHomeDir
+		}()
+		userConfigDir = func() (string, error) { return primaryDir, nil }
+		userHomeDir = func() (string, error) { return fallbackDir, nil }
+
+		// Create config only in fallback location
+		configDir := filepath.Join(fallbackDir, ".config", "mdp")
+		if err := os.MkdirAll(configDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		configFile := filepath.Join(configDir, "config.yaml")
+		if err := os.WriteFile(configFile, []byte(""), 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		result := resolveConfigPath()
+		if result != configFile {
+			t.Errorf("resolveConfigPath() = %q, want %q", result, configFile)
+		}
+	})
+
+	t.Run("returns empty string when no config file exists", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		originalConfigDir := userConfigDir
+		originalHomeDir := userHomeDir
+		defer func() {
+			userConfigDir = originalConfigDir
+			userHomeDir = originalHomeDir
+		}()
+		userConfigDir = func() (string, error) { return filepath.Join(tmpDir, "config"), nil }
+		userHomeDir = func() (string, error) { return filepath.Join(tmpDir, "home"), nil }
+
+		result := resolveConfigPath()
+		if result != "" {
+			t.Errorf("resolveConfigPath() = %q, want empty string", result)
+		}
 	})
 }
 
@@ -221,6 +313,94 @@ func TestLoad(t *testing.T) {
 		}
 		configDir, _ := os.UserConfigDir()
 		expected := filepath.Join(configDir, "mdp")
+		if cfg.ConfigDir != expected {
+			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, expected)
+		}
+	})
+
+	t.Run("loads config.yml when config.yaml does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		originalConfigDir := userConfigDir
+		defer func() { userConfigDir = originalConfigDir }()
+		userConfigDir = func() (string, error) { return tmpDir, nil }
+
+		configDir := filepath.Join(tmpDir, "mdp")
+		if err := os.MkdirAll(configDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		configFile := filepath.Join(configDir, "config.yml")
+		content := []byte("output_dir: /yml/output\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load("")
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.OutputDir != "/yml/output" {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, "/yml/output")
+		}
+		if cfg.ConfigDir != configDir {
+			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, configDir)
+		}
+	})
+
+	t.Run("loads config from fallback path when primary does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		primaryDir := filepath.Join(tmpDir, "primary")
+		fallbackDir := filepath.Join(tmpDir, "fallback")
+
+		originalConfigDir := userConfigDir
+		originalHomeDir := userHomeDir
+		defer func() {
+			userConfigDir = originalConfigDir
+			userHomeDir = originalHomeDir
+		}()
+		userConfigDir = func() (string, error) { return primaryDir, nil }
+		userHomeDir = func() (string, error) { return fallbackDir, nil }
+
+		// Create config only in fallback location
+		configDir := filepath.Join(fallbackDir, ".config", "mdp")
+		if err := os.MkdirAll(configDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		configFile := filepath.Join(configDir, "config.yaml")
+		content := []byte("output_dir: /fallback/output\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load("")
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.OutputDir != "/fallback/output" {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, "/fallback/output")
+		}
+		if cfg.ConfigDir != configDir {
+			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, configDir)
+		}
+	})
+
+	t.Run("uses first candidate dir for ConfigDir when no config file exists", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		originalConfigDir := userConfigDir
+		originalHomeDir := userHomeDir
+		defer func() {
+			userConfigDir = originalConfigDir
+			userHomeDir = originalHomeDir
+		}()
+		userConfigDir = func() (string, error) { return filepath.Join(tmpDir, "config"), nil }
+		userHomeDir = func() (string, error) { return filepath.Join(tmpDir, "home"), nil }
+
+		cfg, err := Load("")
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		expected := filepath.Join(tmpDir, "config", "mdp")
 		if cfg.ConfigDir != expected {
 			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, expected)
 		}

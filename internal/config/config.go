@@ -37,12 +37,31 @@ func DefaultBrowserCommand() string {
 	}
 }
 
-func configPath() string {
-	configDir, err := userConfigDir()
-	if err != nil {
-		panic(err)
+func configPathCandidates() []string {
+	var candidates []string
+
+	if configDir, err := userConfigDir(); err == nil {
+		dir := filepath.Join(configDir, "mdp")
+		candidates = append(candidates, filepath.Join(dir, "config.yaml"))
+		candidates = append(candidates, filepath.Join(dir, "config.yml"))
 	}
-	return filepath.Join(configDir, "mdp", "config.yaml")
+
+	if homeDir, err := userHomeDir(); err == nil {
+		dir := filepath.Join(homeDir, ".config", "mdp")
+		candidates = append(candidates, filepath.Join(dir, "config.yaml"))
+		candidates = append(candidates, filepath.Join(dir, "config.yml"))
+	}
+
+	return candidates
+}
+
+func resolveConfigPath() string {
+	for _, path := range configPathCandidates() {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return ""
 }
 
 // Config holds the application configuration.
@@ -61,7 +80,12 @@ func Load(path string) (*Config, error) {
 	}
 
 	if path == "" {
-		path = configPath()
+		path = resolveConfigPath()
+		if path == "" {
+			// No config file found, use default ConfigDir
+			cfg.ConfigDir = filepath.Dir(configPathCandidates()[0])
+			return cfg, nil
+		}
 	}
 
 	cfg.ConfigDir = filepath.Dir(path)
