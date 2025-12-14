@@ -79,6 +79,7 @@ func (w *Watcher) Errors() <-chan error {
 	return w.errors
 }
 
+//nolint:cyclop // complexity is acceptable for event loop with debouncing
 func (w *Watcher) loop() {
 	// Debounce timer to coalesce rapid events
 	var debounceTimer *time.Timer
