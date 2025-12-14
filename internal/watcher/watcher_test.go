@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() returned error: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	// Verify watcher is created
 	if w == nil {
@@ -48,14 +48,14 @@ func TestWatchFileChange(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() returned error: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	w.Start()
 
 	// Modify the file
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		os.WriteFile(tmpFile, []byte("# Updated"), 0644)
+		_ = os.WriteFile(tmpFile, []byte("# Updated"), 0600)
 	}()
 
 	// Wait for event
@@ -82,7 +82,7 @@ func TestWatchFileChange_AtomicSave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() returned error: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	w.Start()
 
@@ -90,8 +90,8 @@ func TestWatchFileChange_AtomicSave(t *testing.T) {
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		tmpNew := filepath.Join(tmpDir, "test.md.tmp")
-		os.WriteFile(tmpNew, []byte("# Updated"), 0644)
-		os.Rename(tmpNew, tmpFile)
+		_ = os.WriteFile(tmpNew, []byte("# Updated"), 0600)
+		_ = os.Rename(tmpNew, tmpFile)
 	}()
 
 	// Wait for event

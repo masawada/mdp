@@ -42,7 +42,7 @@ func New(filePath string) (*Watcher, error) {
 
 	// Watch the directory instead of the file
 	if err := fsWatcher.Add(dir); err != nil {
-		fsWatcher.Close()
+		_ = fsWatcher.Close()
 		return nil, fmt.Errorf("failed to watch directory: %w", err)
 	}
 

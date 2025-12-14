@@ -89,7 +89,7 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 		_, _ = fmt.Fprintf(c.errWriter, "error: failed to start watcher: %v\n", err)
 		return 1
 	}
-	defer fileWatcher.Close()
+	defer func() { _ = fileWatcher.Close() }()
 
 	fileWatcher.Start()
 	_, _ = fmt.Fprintln(c.outWriter, "Watching for changes... (Ctrl+C to stop)")
