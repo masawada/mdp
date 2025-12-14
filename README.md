@@ -27,6 +27,10 @@ mdp [options] <markdown-file>
 
 ## Installation
 
+### Download binary
+
+Download the latest binary from [Releases](https://github.com/masawada/mdp/releases) and place it in your `$PATH`.
+
 ### Go
 
 ```console
