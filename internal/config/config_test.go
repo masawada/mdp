@@ -405,4 +405,102 @@ func TestLoad(t *testing.T) {
 			t.Errorf("ConfigDir = %q, want %q", cfg.ConfigDir, expected)
 		}
 	})
+
+	t.Run("expands tilde in output_dir", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		homeDir := filepath.Join(tmpDir, "home")
+
+		originalHomeDir := userHomeDir
+		defer func() { userHomeDir = originalHomeDir }()
+		userHomeDir = func() (string, error) { return homeDir, nil }
+
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("output_dir: ~/.mdp-custom\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		expected := filepath.Join(homeDir, ".mdp-custom")
+		if cfg.OutputDir != expected {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, expected)
+		}
+	})
+}
+
+func TestExpandTilde(t *testing.T) {
+	t.Run("returns empty string unchanged", func(t *testing.T) {
+		result, err := expandTilde("")
+		if err != nil {
+			t.Fatalf("expandTilde() returned error: %v", err)
+		}
+		if result != "" {
+			t.Errorf("expandTilde(\"\") = %q, want \"\"", result)
+		}
+	})
+
+	t.Run("returns path without tilde unchanged", func(t *testing.T) {
+		result, err := expandTilde("/some/absolute/path")
+		if err != nil {
+			t.Fatalf("expandTilde() returned error: %v", err)
+		}
+		if result != "/some/absolute/path" {
+			t.Errorf("expandTilde(\"/some/absolute/path\") = %q, want \"/some/absolute/path\"", result)
+		}
+	})
+
+	t.Run("expands ~ to home directory", func(t *testing.T) {
+		homeDir := "/home/testuser"
+		originalHomeDir := userHomeDir
+		defer func() { userHomeDir = originalHomeDir }()
+		userHomeDir = func() (string, error) { return homeDir, nil }
+
+		result, err := expandTilde("~")
+		if err != nil {
+			t.Fatalf("expandTilde() returned error: %v", err)
+		}
+		if result != homeDir {
+			t.Errorf("expandTilde(\"~\") = %q, want %q", result, homeDir)
+		}
+	})
+
+	t.Run("expands ~/ to home directory with path", func(t *testing.T) {
+		homeDir := "/home/testuser"
+		originalHomeDir := userHomeDir
+		defer func() { userHomeDir = originalHomeDir }()
+		userHomeDir = func() (string, error) { return homeDir, nil }
+
+		result, err := expandTilde("~/.config/mdp")
+		if err != nil {
+			t.Fatalf("expandTilde() returned error: %v", err)
+		}
+		expected := homeDir + "/.config/mdp"
+		if result != expected {
+			t.Errorf("expandTilde(\"~/.config/mdp\") = %q, want %q", result, expected)
+		}
+	})
+
+	t.Run("returns error when userHomeDir fails", func(t *testing.T) {
+		originalHomeDir := userHomeDir
+		defer func() { userHomeDir = originalHomeDir }()
+		userHomeDir = func() (string, error) { return "", errors.New("home dir not found") }
+
+		_, err := expandTilde("~/.config")
+		if err == nil {
+			t.Error("expandTilde() should return error when userHomeDir fails")
+		}
+	})
+
+	t.Run("does not expand ~username", func(t *testing.T) {
+		result, err := expandTilde("~otheruser/.config")
+		if err != nil {
+			t.Fatalf("expandTilde() returned error: %v", err)
+		}
+		if result != "~otheruser/.config" {
+			t.Errorf("expandTilde(\"~otheruser/.config\") = %q, want \"~otheruser/.config\"", result)
+		}
+	})
 }
