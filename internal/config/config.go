@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -35,6 +36,17 @@ func DefaultBrowserCommand() string {
 	default:
 		panic(fmt.Sprintf("unsupported platform: %s", goos))
 	}
+}
+
+func expandTilde(path string) (string, error) {
+	if !strings.HasPrefix(path, "~/") && path != "~" {
+		return path, nil
+	}
+	home, err := userHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return home + path[1:], nil
 }
 
 func configPathCandidates() []string {
@@ -104,6 +116,12 @@ func Load(path string) (*Config, error) {
 
 	if cfg.OutputDir == "" {
 		cfg.OutputDir = DefaultOutputDir()
+	} else {
+		expanded, err := expandTilde(cfg.OutputDir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand output_dir: %w", err)
+		}
+		cfg.OutputDir = expanded
 	}
 	if cfg.BrowserCommand == "" {
 		cfg.BrowserCommand = DefaultBrowserCommand()
