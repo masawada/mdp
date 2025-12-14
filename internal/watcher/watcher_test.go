@@ -69,6 +69,42 @@ func TestWatchFileChange(t *testing.T) {
 	}
 }
 
+func TestWatchFileChange_AtomicSave(t *testing.T) {
+	// Create a temporary file
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "test.md")
+	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create watcher
+	w, err := New(tmpFile)
+	if err != nil {
+		t.Fatalf("New() returned error: %v", err)
+	}
+	defer w.Close()
+
+	w.Start()
+
+	// Simulate atomic save (write to temp file, then rename)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		tmpNew := filepath.Join(tmpDir, "test.md.tmp")
+		os.WriteFile(tmpNew, []byte("# Updated"), 0644)
+		os.Rename(tmpNew, tmpFile)
+	}()
+
+	// Wait for event
+	select {
+	case <-w.Events():
+		// Success
+	case err := <-w.Errors():
+		t.Fatalf("Errors() returned: %v", err)
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for event from atomic save")
+	}
+}
+
 func TestClose(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()

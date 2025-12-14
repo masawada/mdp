@@ -3,6 +3,7 @@ package watcher
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -12,6 +13,7 @@ import (
 type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 	filePath  string
+	fileName  string
 	events    chan struct{}
 	errors    chan error
 	done      chan struct{}
@@ -24,19 +26,29 @@ func New(filePath string) (*Watcher, error) {
 		return nil, fmt.Errorf("file not found: %w", err)
 	}
 
+	// Get absolute path and directory
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path: %w", err)
+	}
+	dir := filepath.Dir(absPath)
+	fileName := filepath.Base(absPath)
+
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	if err := fsWatcher.Add(filePath); err != nil {
+	// Watch the directory instead of the file
+	if err := fsWatcher.Add(dir); err != nil {
 		fsWatcher.Close()
-		return nil, fmt.Errorf("failed to watch file: %w", err)
+		return nil, fmt.Errorf("failed to watch directory: %w", err)
 	}
 
 	w := &Watcher{
 		fsWatcher: fsWatcher,
-		filePath:  filePath,
+		filePath:  absPath,
+		fileName:  fileName,
 		events:    make(chan struct{}),
 		errors:    make(chan error),
 		done:      make(chan struct{}),
@@ -79,8 +91,12 @@ func (w *Watcher) loop() {
 			if !ok {
 				return
 			}
-			// Only handle Write events
-			if event.Op&fsnotify.Write == fsnotify.Write {
+			// Filter events by target file name
+			if filepath.Base(event.Name) != w.fileName {
+				continue
+			}
+			// Handle Write and Create events (Create handles atomic saves)
+			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 				// Debounce: reset timer on each event
 				if debounceTimer != nil {
 					debounceTimer.Stop()
