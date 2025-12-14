@@ -12,9 +12,11 @@ build:
 	$(GO) build $(GOFLAGS) -o $(BINARY_NAME) $(MAIN_PATH)
 	@echo "Build complete: $(BINARY_NAME)"
 
+# Run tests in Docker to avoid interference from user's local config files
+# To run without Docker: go test ./...
 test:
-	@echo "Running tests..."
-	$(GO) test ./...
+	@echo "Running tests in Docker..."
+	docker run --rm -v $(CURDIR):/app -v mdp-go-cache:/go -w /app golang:1.25-alpine go test ./...
 	@echo "Tests completed."
 
 e2e-test: build
