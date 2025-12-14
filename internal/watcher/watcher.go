@@ -3,6 +3,7 @@ package watcher
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -48,4 +49,57 @@ func New(filePath string) (*Watcher, error) {
 func (w *Watcher) Close() error {
 	close(w.done)
 	return w.fsWatcher.Close()
+}
+
+// Start begins watching for file changes
+func (w *Watcher) Start() {
+	go w.loop()
+}
+
+// Events returns a channel that receives notifications when the file changes
+func (w *Watcher) Events() <-chan struct{} {
+	return w.events
+}
+
+// Errors returns a channel that receives watcher errors
+func (w *Watcher) Errors() <-chan error {
+	return w.errors
+}
+
+func (w *Watcher) loop() {
+	// Debounce timer to coalesce rapid events
+	var debounceTimer *time.Timer
+	const debounceInterval = 100 * time.Millisecond
+
+	for {
+		select {
+		case <-w.done:
+			return
+		case event, ok := <-w.fsWatcher.Events:
+			if !ok {
+				return
+			}
+			// Only handle Write events
+			if event.Op&fsnotify.Write == fsnotify.Write {
+				// Debounce: reset timer on each event
+				if debounceTimer != nil {
+					debounceTimer.Stop()
+				}
+				debounceTimer = time.AfterFunc(debounceInterval, func() {
+					select {
+					case w.events <- struct{}{}:
+					case <-w.done:
+					}
+				})
+			}
+		case err, ok := <-w.fsWatcher.Errors:
+			if !ok {
+				return
+			}
+			select {
+			case w.errors <- err:
+			case <-w.done:
+			}
+		}
+	}
 }
