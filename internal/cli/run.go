@@ -42,5 +42,5 @@ func Run() int {
 		return c.listFiles()
 	}
 
-	return c.run(args.filePath)
+	return c.run(args.filePath, args.watchMode)
 }

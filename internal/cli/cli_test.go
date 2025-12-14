@@ -21,7 +21,7 @@ func TestRun_FileNotFound(t *testing.T) {
 		errWriter: &stderr,
 	}
 
-	exitCode := c.run("/nonexistent/file.md")
+	exitCode := c.run("/nonexistent/file.md", false)
 	if exitCode != 1 {
 		t.Errorf("run() exit code = %d, want 1", exitCode)
 	}
@@ -52,7 +52,7 @@ func TestRun_Success(t *testing.T) {
 		configPath: configFile,
 	}
 
-	exitCode := c.run(mdFile)
+	exitCode := c.run(mdFile, false)
 	if exitCode != 0 {
 		t.Errorf("run() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
 	}

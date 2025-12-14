@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/masawada/mdp/internal/browser"
 	"github.com/masawada/mdp/internal/config"
@@ -18,7 +20,7 @@ type cli struct {
 	configPath           string
 }
 
-func (c *cli) run(filePath string) int {
+func (c *cli) run(filePath string, watchMode bool) int {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		_, _ = fmt.Fprintf(c.errWriter, "error: file not found: %s\n", filePath)
 		return 1
@@ -67,6 +69,13 @@ func (c *cli) run(filePath string) int {
 	if err := opener.Open(outputPath); err != nil {
 		_, _ = fmt.Fprintf(c.errWriter, "error: failed to open browser: %v\n", err)
 		return 1
+	}
+
+	// If watch mode is enabled, start the watch loop
+	if watchMode {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		return c.runWatchLoop(absPath, r, writer, sigChan)
 	}
 
 	return 0
