@@ -160,7 +160,7 @@ func TestReconvert(t *testing.T) {
 	// Create temporary directory
 	tmpDir := t.TempDir()
 	mdFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil {
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
 		t.Fatal(err)
 	}
 
@@ -193,7 +193,7 @@ func TestRunWatchLoop_SignalHandling(t *testing.T) {
 	// Create temporary file
 	tmpDir := t.TempDir()
 	mdFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil {
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
 		t.Fatal(err)
 	}
 
