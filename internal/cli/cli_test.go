@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/masawada/mdp/internal/output"
+	"github.com/masawada/mdp/internal/renderer"
 )
 
 func TestRun_FileNotFound(t *testing.T) {
@@ -148,5 +151,38 @@ func TestListFiles_DirectoryNotExist(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "output directory does not exist") {
 		t.Errorf("stderr should contain error message, got: %s", stderr.String())
+	}
+}
+
+func TestReconvert(t *testing.T) {
+	// Create temporary directory
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "test.md")
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outDir := filepath.Join(tmpDir, "output")
+	var outBuf, errBuf bytes.Buffer
+
+	c := &cli{
+		outWriter: &outBuf,
+		errWriter: &errBuf,
+	}
+
+	r, err := renderer.NewRenderer("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := output.NewWriter(outDir)
+
+	outputPath, err := c.reconvert(mdFile, r, w)
+	if err != nil {
+		t.Fatalf("reconvert() returned error: %v", err)
+	}
+
+	// Verify output file exists
+	if _, err := os.Stat(outputPath); err != nil {
+		t.Errorf("output file not found: %v", err)
 	}
 }

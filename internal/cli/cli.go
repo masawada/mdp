@@ -71,6 +71,29 @@ func (c *cli) run(filePath string) int {
 	return 0
 }
 
+// reconvert reads the markdown file, renders it, and writes the output
+func (c *cli) reconvert(filePath string, r *renderer.Renderer, w *output.Writer) (string, error) {
+	// Read file
+	markdown, err := os.ReadFile(filePath) //nolint:gosec // G304: path is user-specified input file
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Render markdown to HTML
+	html, err := r.Render(markdown)
+	if err != nil {
+		return "", fmt.Errorf("failed to render: %w", err)
+	}
+
+	// Write output
+	outputPath, err := w.Write(filePath, html)
+	if err != nil {
+		return "", fmt.Errorf("failed to write: %w", err)
+	}
+
+	return outputPath, nil
+}
+
 func (c *cli) listFiles() int {
 	cfg, err := config.Load(c.configPath)
 	if err != nil {
