@@ -47,10 +47,19 @@ $ make
 
 ## Configuration
 
-Configuration file is loaded from the following location:
+Configuration file is loaded from the following locations in order of priority:
 
-- macOS: `~/Library/Application Support/mdp/config.yaml`
-- Linux: `~/.config/mdp/config.yaml` (or `$XDG_CONFIG_HOME/mdp/config.yaml`)
+1. `--config` flag (explicit path)
+2. `$UserConfigDir/mdp/config.yaml`
+3. `$UserConfigDir/mdp/config.yml`
+4. `$HOME/.config/mdp/config.yaml`
+5. `$HOME/.config/mdp/config.yml`
+6. No config file (use defaults)
+
+`$UserConfigDir` is determined by `os.UserConfigDir()`:
+
+- macOS: `~/Library/Application Support`
+- Linux: `~/.config` (or `$XDG_CONFIG_HOME`)
 
 ```yaml
 # Output directory for generated HTML files (default: ~/.mdp)
