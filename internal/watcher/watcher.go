@@ -10,7 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// Watcher watches for file changes
+// Watcher watches for file changes.
 type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 	filePath  string

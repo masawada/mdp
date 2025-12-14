@@ -81,7 +81,7 @@ func (c *cli) run(filePath string, watchMode bool) int {
 	return 0
 }
 
-// runWatchLoop watches for file changes and regenerates HTML
+// runWatchLoop watches for file changes and regenerates HTML.
 func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writer, sigChan <-chan os.Signal) int {
 	// Create watcher
 	fileWatcher, err := watcher.New(filePath)
@@ -112,7 +112,7 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 	}
 }
 
-// reconvert reads the markdown file, renders it, and writes the output
+// reconvert reads the markdown file, renders it, and writes the output.
 func (c *cli) reconvert(filePath string, r *renderer.Renderer, w *output.Writer) (string, error) {
 	// Read file
 	markdown, err := os.ReadFile(filePath) //nolint:gosec // G304: path is user-specified input file
