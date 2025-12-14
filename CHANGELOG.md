@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.2.0](https://github.com/masawada/mdp/compare/v0.1.1...v0.2.0) - 2025-12-14
+- Add config path fallback to $HOME/.config and support .yml extension by @masawada in https://github.com/masawada/mdp/pull/9
+- Update README with installation and config documentation by @masawada in https://github.com/masawada/mdp/pull/11
+- Fix tilde expansion for output_dir config by @masawada in https://github.com/masawada/mdp/pull/12
+- Run tests in Docker to isolate from local config by @masawada in https://github.com/masawada/mdp/pull/13
+- Add --watch flag for automatic regeneration on file changes by @masawada in https://github.com/masawada/mdp/pull/14
+- Specify MIT License for this project by @masawada in https://github.com/masawada/mdp/pull/15
+
 ## [v0.1.1](https://github.com/masawada/mdp/compare/v0.1.0...v0.1.1) - 2025-12-13
 - Fix goreleaser config option typo by @masawada in https://github.com/masawada/mdp/pull/7
 
