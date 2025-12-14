@@ -11,7 +11,7 @@ func TestNew(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
 		t.Fatal(err)
 	}
 
@@ -39,7 +39,7 @@ func TestWatchFileChange(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
 		t.Fatal(err)
 	}
 
@@ -73,7 +73,7 @@ func TestWatchFileChange_AtomicSave(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
 		t.Fatal(err)
 	}
 
@@ -109,7 +109,7 @@ func TestClose(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte("# Test"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
 		t.Fatal(err)
 	}
 
