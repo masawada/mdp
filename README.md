@@ -95,3 +95,7 @@ For example, to use a theme named `custom`, create `themes/custom.html` in your 
 ```
 
 The `{{.Content}}` placeholder will be replaced with the rendered HTML content.
+
+## License
+
+MIT
