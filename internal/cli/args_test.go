@@ -78,6 +78,23 @@ func TestParseArgs(t *testing.T) {
 			args:       []string{"--help", "--list"},
 			wantErrMsg: "help requested",
 		},
+		{
+			name: "watch flag",
+			args: []string{"--watch", "test.md"},
+			wantArgs: &parsedArgs{
+				filePath:  "test.md",
+				watchMode: true,
+			},
+		},
+		{
+			name: "watch flag with config",
+			args: []string{"--watch", "--config", "config.yaml", "test.md"},
+			wantArgs: &parsedArgs{
+				filePath:   "test.md",
+				configPath: "config.yaml",
+				watchMode:  true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -105,6 +122,9 @@ func TestParseArgs(t *testing.T) {
 			}
 			if got.showList != tt.wantArgs.showList {
 				t.Errorf("parseArgs() showList = %v, want %v", got.showList, tt.wantArgs.showList)
+			}
+			if got.watchMode != tt.wantArgs.watchMode {
+				t.Errorf("parseArgs() watchMode = %v, want %v", got.watchMode, tt.wantArgs.watchMode)
 			}
 		})
 	}

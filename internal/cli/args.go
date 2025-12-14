@@ -17,6 +17,7 @@ type parsedArgs struct {
 	filePath    string
 	showList    bool
 	showVersion bool
+	watchMode   bool
 }
 
 func parseArgs(args []string) (*parsedArgs, error) {
@@ -27,6 +28,7 @@ func parseArgs(args []string) (*parsedArgs, error) {
 	showHelp := fs.Bool("help", false, "show help message")
 	showList := fs.Bool("list", false, "list generated files")
 	showVersion := fs.Bool("version", false, "show version")
+	watchMode := fs.Bool("watch", false, "watch for file changes")
 
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -59,5 +61,6 @@ func parseArgs(args []string) (*parsedArgs, error) {
 	return &parsedArgs{
 		configPath: *configPath,
 		filePath:   fs.Arg(0),
+		watchMode:  *watchMode,
 	}, nil
 }
