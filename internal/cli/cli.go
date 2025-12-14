@@ -10,6 +10,7 @@ import (
 	"github.com/masawada/mdp/internal/config"
 	"github.com/masawada/mdp/internal/output"
 	"github.com/masawada/mdp/internal/renderer"
+	"github.com/masawada/mdp/internal/watcher"
 )
 
 type cli struct {
@@ -69,6 +70,37 @@ func (c *cli) run(filePath string) int {
 	}
 
 	return 0
+}
+
+// runWatchLoop watches for file changes and regenerates HTML
+func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writer, sigChan <-chan os.Signal) int {
+	// Create watcher
+	fileWatcher, err := watcher.New(filePath)
+	if err != nil {
+		_, _ = fmt.Fprintf(c.errWriter, "error: failed to start watcher: %v\n", err)
+		return 1
+	}
+	defer fileWatcher.Close()
+
+	fileWatcher.Start()
+	_, _ = fmt.Fprintln(c.outWriter, "Watching for changes... (Ctrl+C to stop)")
+
+	for {
+		select {
+		case <-fileWatcher.Events():
+			outputPath, err := c.reconvert(filePath, r, w)
+			if err != nil {
+				_, _ = fmt.Fprintf(c.errWriter, "error: %v\n", err)
+				continue
+			}
+			_, _ = fmt.Fprintf(c.outWriter, "Regenerated: %s\n", outputPath)
+		case err := <-fileWatcher.Errors():
+			_, _ = fmt.Fprintf(c.errWriter, "watcher error: %v\n", err)
+		case <-sigChan:
+			_, _ = fmt.Fprintln(c.outWriter, "\nStopping watcher...")
+			return 0
+		}
+	}
 }
 
 // reconvert reads the markdown file, renders it, and writes the output

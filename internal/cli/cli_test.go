@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/masawada/mdp/internal/output"
 	"github.com/masawada/mdp/internal/renderer"
@@ -184,5 +186,39 @@ func TestReconvert(t *testing.T) {
 	// Verify output file exists
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Errorf("output file not found: %v", err)
+	}
+}
+
+func TestRunWatchLoop_SignalHandling(t *testing.T) {
+	// Create temporary file
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "test.md")
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outDir := filepath.Join(tmpDir, "output")
+	var outBuf, errBuf bytes.Buffer
+
+	c := &cli{
+		outWriter: &outBuf,
+		errWriter: &errBuf,
+	}
+
+	r, _ := renderer.NewRenderer("", "")
+	w := output.NewWriter(outDir)
+
+	// Create channel for signal injection
+	sigChan := make(chan os.Signal, 1)
+
+	// Send signal in separate goroutine
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		sigChan <- syscall.SIGINT
+	}()
+
+	exitCode := c.runWatchLoop(mdFile, r, w, sigChan)
+	if exitCode != 0 {
+		t.Errorf("runWatchLoop() returned %d, want 0", exitCode)
 	}
 }
