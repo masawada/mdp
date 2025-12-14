@@ -20,7 +20,7 @@ type Watcher struct {
 	done      chan struct{}
 }
 
-// New creates a new Watcher for the specified file
+// New creates a new Watcher for the specified file.
 func New(filePath string) (*Watcher, error) {
 	// Check if file exists
 	if _, err := os.Stat(filePath); err != nil {
@@ -58,23 +58,23 @@ func New(filePath string) (*Watcher, error) {
 	return w, nil
 }
 
-// Close stops the watcher and releases resources
+// Close stops the watcher and releases resources.
 func (w *Watcher) Close() error {
 	close(w.done)
 	return w.fsWatcher.Close()
 }
 
-// Start begins watching for file changes
+// Start begins watching for file changes.
 func (w *Watcher) Start() {
 	go w.loop()
 }
 
-// Events returns a channel that receives notifications when the file changes
+// Events returns a channel that receives notifications when the file changes.
 func (w *Watcher) Events() <-chan struct{} {
 	return w.events
 }
 
-// Errors returns a channel that receives watcher errors
+// Errors returns a channel that receives watcher errors.
 func (w *Watcher) Errors() <-chan error {
 	return w.errors
 }
