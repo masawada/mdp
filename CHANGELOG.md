@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.3.0](https://github.com/masawada/mdp/compare/v0.2.0...v0.3.0) - 2025-12-20
+- Bump Songmu/tagpr from 1.9.1 to 1.10.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/16
+- Add title extraction support for theme templates by @masawada in https://github.com/masawada/mdp/pull/18
+
 ## [v0.2.0](https://github.com/masawada/mdp/compare/v0.1.1...v0.2.0) - 2025-12-14
 - Add config path fallback to $HOME/.config and support .yml extension by @masawada in https://github.com/masawada/mdp/pull/9
 - Update README with installation and config documentation by @masawada in https://github.com/masawada/mdp/pull/11
