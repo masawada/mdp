@@ -7,6 +7,12 @@ import (
 	"testing"
 )
 
+const testTitleTemplate = `<!DOCTYPE html>
+<html>
+<head><title>{{.Title}}</title></head>
+<body>{{.Content}}</body>
+</html>`
+
 func TestNewRenderer(t *testing.T) {
 	t.Run("returns renderer without template when themeName is empty", func(t *testing.T) {
 		r, err := NewRenderer("", "")
@@ -155,13 +161,8 @@ func TestRender(t *testing.T) {
 			t.Fatal(err)
 		}
 		themeFile := filepath.Join(themesDir, "test-theme.html")
-		templateContent := `<!DOCTYPE html>
-<html>
-<head><title>{{.Title}}</title></head>
-<body>{{.Content}}</body>
-</html>`
 		//nolint:gosec // G306: test file
-		if err := os.WriteFile(themeFile, []byte(templateContent), 0644); err != nil {
+		if err := os.WriteFile(themeFile, []byte(testTitleTemplate), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -197,13 +198,8 @@ Content here.
 			t.Fatal(err)
 		}
 		themeFile := filepath.Join(themesDir, "test-theme.html")
-		templateContent := `<!DOCTYPE html>
-<html>
-<head><title>{{.Title}}</title></head>
-<body>{{.Content}}</body>
-</html>`
 		//nolint:gosec // G306: test file
-		if err := os.WriteFile(themeFile, []byte(templateContent), 0644); err != nil {
+		if err := os.WriteFile(themeFile, []byte(testTitleTemplate), 0644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -239,13 +235,8 @@ More content.
 			t.Fatal(err)
 		}
 		themeFile := filepath.Join(themesDir, "test-theme.html")
-		templateContent := `<!DOCTYPE html>
-<html>
-<head><title>{{.Title}}</title></head>
-<body>{{.Content}}</body>
-</html>`
 		//nolint:gosec // G306: test file
-		if err := os.WriteFile(themeFile, []byte(templateContent), 0644); err != nil {
+		if err := os.WriteFile(themeFile, []byte(testTitleTemplate), 0644); err != nil {
 			t.Fatal(err)
 		}
 

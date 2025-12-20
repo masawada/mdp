@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 
 	"github.com/yuin/goldmark"
+	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	meta "github.com/yuin/goldmark-meta"
 )
 
 // Renderer converts Markdown to HTML using an optional theme template.
@@ -60,7 +60,10 @@ func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 	doc := md.Parser().Parse(text.NewReader(markdown), parser.WithContext(context))
 
 	// AST からタイトルを抽出
-	title := extractTitle(markdown, doc, context)
+	title, err := extractTitle(markdown, doc, context)
+	if err != nil {
+		return nil, err
+	}
 
 	// 同じ AST から HTML に変換
 	var buf bytes.Buffer
@@ -87,43 +90,59 @@ func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 }
 
 // extractTitle extracts the document title from markdown.
-// Priority: 1. Front-matter title, 2. First heading, 3. "Untitled"
-func extractTitle(source []byte, doc ast.Node, context parser.Context) string {
+// Priority: 1. Front-matter title, 2. First heading, 3. "Untitled".
+func extractTitle(source []byte, doc ast.Node, context parser.Context) (string, error) {
 	// Front-matter から取得
 	metaData := meta.Get(context)
 	if title, ok := metaData["title"].(string); ok && title != "" {
-		return title
+		return title, nil
 	}
 
 	// 最初の heading から取得
-	if heading := findFirstHeading(doc, source); heading != "" {
-		return heading
+	heading, err := findFirstHeading(doc, source)
+	if err != nil {
+		return "", err
+	}
+	if heading != "" {
+		return heading, nil
 	}
 
-	return "Untitled"
+	return "Untitled", nil
 }
 
 // findFirstHeading walks the AST and returns the text of the first heading.
-func findFirstHeading(doc ast.Node, source []byte) string {
+func findFirstHeading(doc ast.Node, source []byte) (string, error) {
 	var result string
-	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering && n.Kind() == ast.KindHeading {
-			result = extractNodeText(n, source)
+			text, err := extractNodeText(n, source)
+			if err != nil {
+				return ast.WalkStop, err
+			}
+			result = text
 			return ast.WalkStop, nil
 		}
 		return ast.WalkContinue, nil
 	})
-	return result
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }
 
 // extractNodeText extracts text content from a node and its children.
-func extractNodeText(n ast.Node, source []byte) string {
+func extractNodeText(n ast.Node, source []byte) (string, error) {
 	var buf bytes.Buffer
-	ast.Walk(n, func(child ast.Node, entering bool) (ast.WalkStatus, error) {
+	err := ast.Walk(n, func(child ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering && child.Kind() == ast.KindText {
-			buf.Write(child.(*ast.Text).Segment.Value(source))
+			if textNode, ok := child.(*ast.Text); ok {
+				buf.Write(textNode.Segment.Value(source))
+			}
 		}
 		return ast.WalkContinue, nil
 	})
-	return buf.String()
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
