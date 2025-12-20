@@ -9,6 +9,8 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	meta "github.com/yuin/goldmark-meta"
 )
 
 // Renderer converts Markdown to HTML using an optional theme template.
@@ -17,6 +19,7 @@ type Renderer struct {
 }
 
 type templateData struct {
+	Title   string
 	Content template.HTML
 }
 
@@ -44,12 +47,18 @@ func NewRenderer(configDir string, themeName string) (*Renderer, error) {
 func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	md := goldmark.New(
-		goldmark.WithExtensions(extension.GFM),
+		goldmark.WithExtensions(
+			extension.GFM,
+			meta.Meta,
+		),
 	)
-	if err := md.Convert(markdown, &buf); err != nil {
+
+	context := parser.NewContext()
+	if err := md.Convert(markdown, &buf, parser.WithContext(context)); err != nil {
 		return nil, err
 	}
 
+	title := extractTitle(context)
 	html := buf.Bytes()
 
 	if r.tmpl == nil {
@@ -57,10 +66,25 @@ func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 	}
 
 	var out bytes.Buffer
-	data := templateData{Content: template.HTML(html)} //nolint:gosec // G203: HTML from markdown conversion is intentional
+	data := templateData{
+		Title:   title,
+		Content: template.HTML(html), //nolint:gosec // G203: HTML from markdown conversion is intentional
+	}
 	if err := r.tmpl.Execute(&out, data); err != nil {
 		return nil, err
 	}
 
 	return out.Bytes(), nil
+}
+
+// extractTitle extracts the document title from markdown.
+// Priority: 1. Front-matter title, 2. First heading, 3. "Untitled"
+func extractTitle(context parser.Context) string {
+	// Front-matter から取得
+	metaData := meta.Get(context)
+	if title, ok := metaData["title"].(string); ok && title != "" {
+		return title
+	}
+
+	return "Untitled"
 }

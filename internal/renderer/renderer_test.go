@@ -147,4 +147,46 @@ func TestRender(t *testing.T) {
 			t.Errorf("Render() should contain unescaped HTML tags, got %q", result)
 		}
 	})
+
+	t.Run("extracts title from front-matter", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		themesDir := filepath.Join(tmpDir, "themes")
+		if err := os.MkdirAll(themesDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		themeFile := filepath.Join(themesDir, "test-theme.html")
+		templateContent := `<!DOCTYPE html>
+<html>
+<head><title>{{.Title}}</title></head>
+<body>{{.Content}}</body>
+</html>`
+		//nolint:gosec // G306: test file
+		if err := os.WriteFile(themeFile, []byte(templateContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		r, err := NewRenderer(tmpDir, "test-theme")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		markdown := []byte(`---
+title: Front-matter Title
+---
+
+# Heading Title
+
+Content here.
+`)
+
+		html, err := r.Render(markdown)
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, "<title>Front-matter Title</title>") {
+			t.Errorf("Expected title 'Front-matter Title', got: %s", result)
+		}
+	})
 }
