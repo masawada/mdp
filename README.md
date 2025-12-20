@@ -84,6 +84,7 @@ For example, to use a theme named `custom`, create `themes/custom.html` in your 
 <html>
 <head>
   <meta charset="utf-8">
+  <title>{{.Title}}</title>
   <style>
     body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
   </style>
@@ -94,7 +95,34 @@ For example, to use a theme named `custom`, create `themes/custom.html` in your 
 </html>
 ```
 
-The `{{.Content}}` placeholder will be replaced with the rendered HTML content.
+### Template Variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{.Title}}` | Document title extracted from the markdown |
+| `{{.Content}}` | Rendered HTML content |
+
+### Title Extraction
+
+The title is extracted from the markdown file in the following order of priority:
+
+1. `title` field in YAML front-matter
+2. First heading in the document
+3. `"Untitled"` (default)
+
+Example with front-matter:
+
+```markdown
+---
+title: My Document Title
+---
+
+# Heading
+
+Content here.
+```
+
+In this case, `{{.Title}}` will be `"My Document Title"`.
 
 ## License
 
