@@ -231,4 +231,42 @@ More content.
 			t.Errorf("Expected title 'First Heading', got: %s", result)
 		}
 	})
+
+	t.Run("returns Untitled when no front-matter and no heading", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		themesDir := filepath.Join(tmpDir, "themes")
+		if err := os.MkdirAll(themesDir, 0755); err != nil { //nolint:gosec // G301: test directory
+			t.Fatal(err)
+		}
+		themeFile := filepath.Join(themesDir, "test-theme.html")
+		templateContent := `<!DOCTYPE html>
+<html>
+<head><title>{{.Title}}</title></head>
+<body>{{.Content}}</body>
+</html>`
+		//nolint:gosec // G306: test file
+		if err := os.WriteFile(themeFile, []byte(templateContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		r, err := NewRenderer(tmpDir, "test-theme")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		markdown := []byte(`Just some text without any heading.
+
+More text here.
+`)
+
+		html, err := r.Render(markdown)
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, "<title>Untitled</title>") {
+			t.Errorf("Expected title 'Untitled', got: %s", result)
+		}
+	})
 }
