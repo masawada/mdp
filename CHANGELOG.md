@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.3.1](https://github.com/masawada/mdp/compare/v0.3.0...v0.3.1) - 2026-01-11
+- Bump github.com/yuin/goldmark from 1.7.13 to 1.7.16 by @dependabot[bot] in https://github.com/masawada/mdp/pull/20
+- Bump Songmu/tagpr from 1.10.0 to 1.11.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/19
+
 ## [v0.3.0](https://github.com/masawada/mdp/compare/v0.2.0...v0.3.0) - 2025-12-20
 - Bump Songmu/tagpr from 1.9.1 to 1.10.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/16
 - Add title extraction support for theme templates by @masawada in https://github.com/masawada/mdp/pull/18
