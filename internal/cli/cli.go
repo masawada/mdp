@@ -20,46 +20,50 @@ type cli struct {
 	configPath           string
 }
 
+func (c *cli) errorf(format string, args ...any) {
+	_, _ = fmt.Fprintf(c.errWriter, format, args...)
+}
+
 func (c *cli) run(filePath string, watchMode bool) int {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		_, _ = fmt.Fprintf(c.errWriter, "error: file not found: %s\n", filePath)
+		c.errorf("error: file not found: %s\n", filePath)
 		return 1
 	}
 
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: %v\n", err)
+		c.errorf("error: %v\n", err)
 		return 1
 	}
 
 	cfg, err := config.Load(c.configPath)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to load config: %v\n", err)
+		c.errorf("error: failed to load config: %v\n", err)
 		return 1
 	}
 
 	r, err := renderer.NewRenderer(cfg.ConfigDir, cfg.Theme)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to initialize renderer: %v\n", err)
+		c.errorf("error: failed to initialize renderer: %v\n", err)
 		return 1
 	}
 
 	markdown, err := os.ReadFile(absPath) //nolint:gosec // G304: path is user-specified input file
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to read file: %v\n", err)
+		c.errorf("error: failed to read file: %v\n", err)
 		return 1
 	}
 
 	html, err := r.Render(markdown)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to render: %v\n", err)
+		c.errorf("error: failed to render: %v\n", err)
 		return 1
 	}
 
 	writer := output.NewWriter(cfg.OutputDir)
 	outputPath, err := writer.Write(absPath, html)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to write html: %v\n", err)
+		c.errorf("error: failed to write html: %v\n", err)
 		return 1
 	}
 
@@ -67,7 +71,7 @@ func (c *cli) run(filePath string, watchMode bool) int {
 
 	opener := browser.NewOpener(cfg.BrowserCommand)
 	if err := opener.Open(outputPath); err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to open browser: %v\n", err)
+		c.errorf("error: failed to open browser: %v\n", err)
 		return 1
 	}
 
@@ -86,7 +90,7 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 	// Create watcher
 	fileWatcher, err := watcher.New(filePath)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to start watcher: %v\n", err)
+		c.errorf("error: failed to start watcher: %v\n", err)
 		return 1
 	}
 	defer func() { _ = fileWatcher.Close() }()
@@ -99,12 +103,12 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 		case <-fileWatcher.Events():
 			outputPath, err := c.reconvert(filePath, r, w)
 			if err != nil {
-				_, _ = fmt.Fprintf(c.errWriter, "error: %v\n", err)
+				c.errorf("error: %v\n", err)
 				continue
 			}
 			_, _ = fmt.Fprintf(c.outWriter, "Regenerated: %s\n", outputPath)
 		case err := <-fileWatcher.Errors():
-			_, _ = fmt.Fprintf(c.errWriter, "watcher error: %v\n", err)
+			c.errorf("watcher error: %v\n", err)
 		case <-sigChan:
 			_, _ = fmt.Fprintln(c.outWriter, "\nStopping watcher...")
 			return 0
@@ -138,13 +142,13 @@ func (c *cli) reconvert(filePath string, r *renderer.Renderer, w *output.Writer)
 func (c *cli) listFiles() int {
 	cfg, err := config.Load(c.configPath)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: failed to load config: %v\n", err)
+		c.errorf("error: failed to load config: %v\n", err)
 		return 1
 	}
 
 	files, err := output.ListFiles(cfg.OutputDir)
 	if err != nil {
-		_, _ = fmt.Fprintf(c.errWriter, "error: %v\n", err)
+		c.errorf("error: %v\n", err)
 		return 1
 	}
 
