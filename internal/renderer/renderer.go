@@ -18,6 +18,7 @@ import (
 // Renderer converts Markdown to HTML using an optional theme template.
 type Renderer struct {
 	tmpl *template.Template
+	md   goldmark.Markdown
 }
 
 type templateData struct {
@@ -27,8 +28,15 @@ type templateData struct {
 
 // NewRenderer creates a new Renderer with the specified theme.
 func NewRenderer(configDir string, themeName string) (*Renderer, error) {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			meta.Meta,
+		),
+	)
+
 	if themeName == "" {
-		return &Renderer{tmpl: nil}, nil
+		return &Renderer{tmpl: nil, md: md}, nil
 	}
 
 	themePath := filepath.Join(configDir, "themes", themeName+".html")
@@ -42,22 +50,15 @@ func NewRenderer(configDir string, themeName string) (*Renderer, error) {
 		return nil, err
 	}
 
-	return &Renderer{tmpl: tmpl}, nil
+	return &Renderer{tmpl: tmpl, md: md}, nil
 }
 
 // Render converts Markdown to HTML, applying the theme template if configured.
 func (r *Renderer) Render(markdown []byte) ([]byte, error) {
-	md := goldmark.New(
-		goldmark.WithExtensions(
-			extension.GFM,
-			meta.Meta,
-		),
-	)
-
 	context := parser.NewContext()
 
 	// パースは1回だけ
-	doc := md.Parser().Parse(text.NewReader(markdown), parser.WithContext(context))
+	doc := r.md.Parser().Parse(text.NewReader(markdown), parser.WithContext(context))
 
 	// AST からタイトルを抽出
 	title, err := extractTitle(markdown, doc, context)
@@ -67,7 +68,7 @@ func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 
 	// 同じ AST から HTML に変換
 	var buf bytes.Buffer
-	if err := md.Renderer().Render(&buf, markdown, doc); err != nil {
+	if err := r.md.Renderer().Render(&buf, markdown, doc); err != nil {
 		return nil, err
 	}
 
