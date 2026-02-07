@@ -84,8 +84,7 @@ type Config struct {
 	ConfigDir      string `yaml:"-"`
 }
 
-// Load loads the configuration from the specified path or the default location.
-func Load(path string) (*Config, error) {
+func newDefaultConfig() (*Config, error) {
 	defaultOutputDir, err := DefaultOutputDir()
 	if err != nil {
 		return nil, err
@@ -94,10 +93,17 @@ func Load(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	cfg := &Config{
+	return &Config{
 		OutputDir:      defaultOutputDir,
 		BrowserCommand: defaultBrowserCommand,
+	}, nil
+}
+
+// Load loads the configuration from the specified path or the default location.
+func Load(path string) (*Config, error) {
+	cfg, err := newDefaultConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	if path == "" {
@@ -119,12 +125,13 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
+	defaults := *cfg
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, err
 	}
 
 	if cfg.OutputDir == "" {
-		cfg.OutputDir = defaultOutputDir
+		cfg.OutputDir = defaults.OutputDir
 	} else {
 		expanded, err := expandTilde(cfg.OutputDir)
 		if err != nil {
@@ -133,7 +140,7 @@ func Load(path string) (*Config, error) {
 		cfg.OutputDir = expanded
 	}
 	if cfg.BrowserCommand == "" {
-		cfg.BrowserCommand = defaultBrowserCommand
+		cfg.BrowserCommand = defaults.BrowserCommand
 	}
 
 	return cfg, nil
