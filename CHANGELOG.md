@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.3.2](https://github.com/masawada/mdp/compare/v0.3.1...v0.3.2) - 2026-02-07
+- Bump actions/setup-go from 6.1.0 to 6.2.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/23
+- Bump Songmu/tagpr from 1.11.0 to 1.12.1 by @dependabot[bot] in https://github.com/masawada/mdp/pull/24
+- Bump actions/checkout from 6.0.1 to 6.0.2 by @dependabot[bot] in https://github.com/masawada/mdp/pull/25
+- Bump Songmu/tagpr from 1.12.1 to 1.14.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/27
+- Bump Songmu/tagpr from 1.14.0 to 1.15.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/28
+- Replace panic with error returns in config package by @masawada in https://github.com/masawada/mdp/pull/29
+- Add errorf helper method to reduce error output boilerplate in cli by @masawada in https://github.com/masawada/mdp/pull/30
+- Optimize rendering process by reusing goldmark instance and deduplicating convert logic by @masawada in https://github.com/masawada/mdp/pull/31
+- Deduplicate config loading in CLI by @masawada in https://github.com/masawada/mdp/pull/32
+
 ## [v0.3.1](https://github.com/masawada/mdp/compare/v0.3.0...v0.3.1) - 2026-01-11
 - Bump github.com/yuin/goldmark from 1.7.13 to 1.7.16 by @dependabot[bot] in https://github.com/masawada/mdp/pull/20
 - Bump Songmu/tagpr from 1.10.0 to 1.11.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/19
