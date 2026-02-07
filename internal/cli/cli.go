@@ -17,14 +17,13 @@ import (
 
 type cli struct {
 	outWriter, errWriter io.Writer
-	configPath           string
 }
 
 func (c *cli) errorf(format string, args ...any) {
 	_, _ = fmt.Fprintf(c.errWriter, format, args...)
 }
 
-func (c *cli) run(filePath string, watchMode bool) int {
+func (c *cli) run(filePath string, watchMode bool, cfg *config.Config) int {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		c.errorf("error: file not found: %s\n", filePath)
 		return 1
@@ -33,12 +32,6 @@ func (c *cli) run(filePath string, watchMode bool) int {
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {
 		c.errorf("error: %v\n", err)
-		return 1
-	}
-
-	cfg, err := config.Load(c.configPath)
-	if err != nil {
-		c.errorf("error: failed to load config: %v\n", err)
 		return 1
 	}
 
@@ -127,13 +120,7 @@ func (c *cli) convert(filePath string, r *renderer.Renderer, w *output.Writer) (
 	return outputPath, nil
 }
 
-func (c *cli) listFiles() int {
-	cfg, err := config.Load(c.configPath)
-	if err != nil {
-		c.errorf("error: failed to load config: %v\n", err)
-		return 1
-	}
-
+func (c *cli) listFiles(cfg *config.Config) int {
 	files, err := output.ListFiles(cfg.OutputDir)
 	if err != nil {
 		c.errorf("error: %v\n", err)

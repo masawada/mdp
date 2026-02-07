@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/masawada/mdp/internal/config"
 	"github.com/masawada/mdp/internal/output"
 	"github.com/masawada/mdp/internal/renderer"
 )
@@ -21,7 +22,8 @@ func TestRun_FileNotFound(t *testing.T) {
 		errWriter: &stderr,
 	}
 
-	exitCode := c.run("/nonexistent/file.md", false)
+	cfg := &config.Config{}
+	exitCode := c.run("/nonexistent/file.md", false, cfg)
 	if exitCode != 1 {
 		t.Errorf("run() exit code = %d, want 1", exitCode)
 	}
@@ -45,14 +47,18 @@ func TestRun_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stdout, stderr bytes.Buffer
-	c := &cli{
-		outWriter:  &stdout,
-		errWriter:  &stderr,
-		configPath: configFile,
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	exitCode := c.run(mdFile, false)
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run(mdFile, false, cfg)
 	if exitCode != 0 {
 		t.Errorf("run() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
 	}
@@ -86,14 +92,18 @@ func TestListFiles_WithFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stdout, stderr bytes.Buffer
-	c := &cli{
-		outWriter:  &stdout,
-		errWriter:  &stderr,
-		configPath: configFile,
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	exitCode := c.listFiles()
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.listFiles(cfg)
 	if exitCode != 0 {
 		t.Errorf("listFiles() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
 	}
@@ -115,14 +125,18 @@ func TestListFiles_NoFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stdout, stderr bytes.Buffer
-	c := &cli{
-		outWriter:  &stdout,
-		errWriter:  &stderr,
-		configPath: configFile,
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	exitCode := c.listFiles()
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.listFiles(cfg)
 	if exitCode != 0 {
 		t.Errorf("listFiles() exit code = %d, want 0", exitCode)
 	}
@@ -140,14 +154,18 @@ func TestListFiles_DirectoryNotExist(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var stdout, stderr bytes.Buffer
-	c := &cli{
-		outWriter:  &stdout,
-		errWriter:  &stderr,
-		configPath: configFile,
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	exitCode := c.listFiles()
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.listFiles(cfg)
 	if exitCode != 1 {
 		t.Errorf("listFiles() exit code = %d, want 1", exitCode)
 	}

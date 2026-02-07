@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/masawada/mdp/internal/config"
 )
 
 const usageMessage = `usage: mdp [options] <markdown-file>
@@ -34,14 +36,19 @@ func Run() int {
 	}
 
 	c := &cli{
-		outWriter:  os.Stdout,
-		errWriter:  os.Stderr,
-		configPath: args.configPath,
+		outWriter: os.Stdout,
+		errWriter: os.Stderr,
+	}
+
+	cfg, err := config.Load(args.configPath)
+	if err != nil {
+		c.errorf("error: failed to load config: %v\n", err)
+		return 1
 	}
 
 	if args.showList {
-		return c.listFiles()
+		return c.listFiles(cfg)
 	}
 
-	return c.run(args.filePath, args.watchMode)
+	return c.run(args.filePath, args.watchMode, cfg)
 }
