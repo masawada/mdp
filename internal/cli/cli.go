@@ -48,22 +48,10 @@ func (c *cli) run(filePath string, watchMode bool) int {
 		return 1
 	}
 
-	markdown, err := os.ReadFile(absPath) //nolint:gosec // G304: path is user-specified input file
-	if err != nil {
-		c.errorf("error: failed to read file: %v\n", err)
-		return 1
-	}
-
-	html, err := r.Render(markdown)
-	if err != nil {
-		c.errorf("error: failed to render: %v\n", err)
-		return 1
-	}
-
 	writer := output.NewWriter(cfg.OutputDir)
-	outputPath, err := writer.Write(absPath, html)
+	outputPath, err := c.convert(absPath, r, writer)
 	if err != nil {
-		c.errorf("error: failed to write html: %v\n", err)
+		c.errorf("error: %v\n", err)
 		return 1
 	}
 
@@ -101,7 +89,7 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 	for {
 		select {
 		case <-fileWatcher.Events():
-			outputPath, err := c.reconvert(filePath, r, w)
+			outputPath, err := c.convert(filePath, r, w)
 			if err != nil {
 				c.errorf("error: %v\n", err)
 				continue
@@ -116,8 +104,8 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 	}
 }
 
-// reconvert reads the markdown file, renders it, and writes the output.
-func (c *cli) reconvert(filePath string, r *renderer.Renderer, w *output.Writer) (string, error) {
+// convert reads the markdown file, renders it, and writes the output.
+func (c *cli) convert(filePath string, r *renderer.Renderer, w *output.Writer) (string, error) {
 	// Read file
 	markdown, err := os.ReadFile(filePath) //nolint:gosec // G304: path is user-specified input file
 	if err != nil {

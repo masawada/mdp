@@ -156,7 +156,7 @@ func TestListFiles_DirectoryNotExist(t *testing.T) {
 	}
 }
 
-func TestReconvert(t *testing.T) {
+func TestConvert(t *testing.T) {
 	// Create temporary directory
 	tmpDir := t.TempDir()
 	mdFile := filepath.Join(tmpDir, "test.md")
@@ -178,9 +178,9 @@ func TestReconvert(t *testing.T) {
 	}
 	w := output.NewWriter(outDir)
 
-	outputPath, err := c.reconvert(mdFile, r, w)
+	outputPath, err := c.convert(mdFile, r, w)
 	if err != nil {
-		t.Fatalf("reconvert() returned error: %v", err)
+		t.Fatalf("convert() returned error: %v", err)
 	}
 
 	// Verify output file exists
