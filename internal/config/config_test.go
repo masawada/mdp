@@ -14,13 +14,16 @@ func TestDefaultOutputDir(t *testing.T) {
 			t.Fatal(err)
 		}
 		expected := filepath.Join(homeDir, ".mdp")
-		actual := DefaultOutputDir()
+		actual, err := DefaultOutputDir()
+		if err != nil {
+			t.Fatalf("DefaultOutputDir() returned error: %v", err)
+		}
 		if actual != expected {
 			t.Errorf("DefaultOutputDir() = %q, want %q", actual, expected)
 		}
 	})
 
-	t.Run("panics when UserHomeDir fails", func(t *testing.T) {
+	t.Run("returns error when UserHomeDir fails", func(t *testing.T) {
 		original := userHomeDir
 		defer func() { userHomeDir = original }()
 
@@ -28,13 +31,10 @@ func TestDefaultOutputDir(t *testing.T) {
 			return "", errors.New("$HOME is not defined")
 		}
 
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("DefaultOutputDir() should panic when UserHomeDir fails")
-			}
-		}()
-
-		DefaultOutputDir()
+		_, err := DefaultOutputDir()
+		if err == nil {
+			t.Error("DefaultOutputDir() should return error when UserHomeDir fails")
+		}
 	})
 }
 
@@ -44,7 +44,10 @@ func TestDefaultBrowserCommand(t *testing.T) {
 		defer func() { goos = original }()
 
 		goos = "darwin"
-		cmd := DefaultBrowserCommand()
+		cmd, err := DefaultBrowserCommand()
+		if err != nil {
+			t.Fatalf("DefaultBrowserCommand() returned error: %v", err)
+		}
 		if cmd != "open" {
 			t.Errorf("DefaultBrowserCommand() = %q, want \"open\"", cmd)
 		}
@@ -55,25 +58,25 @@ func TestDefaultBrowserCommand(t *testing.T) {
 		defer func() { goos = original }()
 
 		goos = "linux"
-		cmd := DefaultBrowserCommand()
+		cmd, err := DefaultBrowserCommand()
+		if err != nil {
+			t.Fatalf("DefaultBrowserCommand() returned error: %v", err)
+		}
 		if cmd != "xdg-open" {
 			t.Errorf("DefaultBrowserCommand() = %q, want \"xdg-open\"", cmd)
 		}
 	})
 
-	t.Run("panics on unsupported platform", func(t *testing.T) {
+	t.Run("returns error on unsupported platform", func(t *testing.T) {
 		original := goos
 		defer func() { goos = original }()
 
 		goos = "windows"
 
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("DefaultBrowserCommand() should panic on unsupported platform")
-			}
-		}()
-
-		DefaultBrowserCommand()
+		_, err := DefaultBrowserCommand()
+		if err == nil {
+			t.Error("DefaultBrowserCommand() should return error on unsupported platform")
+		}
 	})
 }
 
@@ -203,11 +206,13 @@ func TestLoad(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Load() returned error: %v", err)
 		}
-		if cfg.OutputDir != DefaultOutputDir() {
-			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, DefaultOutputDir())
+		expectedOutputDir, _ := DefaultOutputDir()
+		if cfg.OutputDir != expectedOutputDir {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, expectedOutputDir)
 		}
-		if cfg.BrowserCommand != DefaultBrowserCommand() {
-			t.Errorf("BrowserCommand = %q, want %q", cfg.BrowserCommand, DefaultBrowserCommand())
+		expectedBrowserCommand, _ := DefaultBrowserCommand()
+		if cfg.BrowserCommand != expectedBrowserCommand {
+			t.Errorf("BrowserCommand = %q, want %q", cfg.BrowserCommand, expectedBrowserCommand)
 		}
 	})
 
@@ -216,8 +221,9 @@ func TestLoad(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Load() returned error: %v", err)
 		}
-		if cfg.OutputDir != DefaultOutputDir() {
-			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, DefaultOutputDir())
+		expectedOutputDir, _ := DefaultOutputDir()
+		if cfg.OutputDir != expectedOutputDir {
+			t.Errorf("OutputDir = %q, want %q", cfg.OutputDir, expectedOutputDir)
 		}
 	})
 

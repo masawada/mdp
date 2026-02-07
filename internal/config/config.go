@@ -18,23 +18,23 @@ var userConfigDir = os.UserConfigDir
 var goos = runtime.GOOS
 
 // DefaultOutputDir returns the default output directory path.
-func DefaultOutputDir() string {
+func DefaultOutputDir() (string, error) {
 	homeDir, err := userHomeDir()
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
-	return filepath.Join(homeDir, ".mdp")
+	return filepath.Join(homeDir, ".mdp"), nil
 }
 
 // DefaultBrowserCommand returns the default browser command for the current OS.
-func DefaultBrowserCommand() string {
+func DefaultBrowserCommand() (string, error) {
 	switch goos {
 	case "darwin":
-		return "open"
+		return "open", nil
 	case "linux":
-		return "xdg-open"
+		return "xdg-open", nil
 	default:
-		panic(fmt.Sprintf("unsupported platform: %s", goos))
+		return "", fmt.Errorf("unsupported platform: %s", goos)
 	}
 }
 
@@ -86,9 +86,18 @@ type Config struct {
 
 // Load loads the configuration from the specified path or the default location.
 func Load(path string) (*Config, error) {
+	defaultOutputDir, err := DefaultOutputDir()
+	if err != nil {
+		return nil, err
+	}
+	defaultBrowserCommand, err := DefaultBrowserCommand()
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
-		OutputDir:      DefaultOutputDir(),
-		BrowserCommand: DefaultBrowserCommand(),
+		OutputDir:      defaultOutputDir,
+		BrowserCommand: defaultBrowserCommand,
 	}
 
 	if path == "" {
@@ -115,7 +124,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	if cfg.OutputDir == "" {
-		cfg.OutputDir = DefaultOutputDir()
+		cfg.OutputDir = defaultOutputDir
 	} else {
 		expanded, err := expandTilde(cfg.OutputDir)
 		if err != nil {
@@ -124,7 +133,7 @@ func Load(path string) (*Config, error) {
 		cfg.OutputDir = expanded
 	}
 	if cfg.BrowserCommand == "" {
-		cfg.BrowserCommand = DefaultBrowserCommand()
+		cfg.BrowserCommand = defaultBrowserCommand
 	}
 
 	return cfg, nil
