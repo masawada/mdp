@@ -21,7 +21,8 @@ builds:
       - -X github.com/masawada/mdp/internal/cli.version={{.Version}}
 
 archives:
-  - format: tar.gz
+  - formats:
+      - tar.gz
     name_template: >-
       {{ .ProjectName }}_
       {{- .Version }}_
