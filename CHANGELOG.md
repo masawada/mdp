@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.3.3](https://github.com/masawada/mdp/compare/v0.3.2...v0.3.3) - 2026-02-27
+- Fix deprecated archives.format in goreleaser config by @masawada in https://github.com/masawada/mdp/pull/33
+- Exclude gosec taint analysis rules (G703, G705) for CLI tool by @masawada in https://github.com/masawada/mdp/pull/36
+- Bump Songmu/tagpr from 1.15.0 to 1.17.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/35
+- Update installation section in README by @masawada in https://github.com/masawada/mdp/pull/37
+
 ## [v0.3.2](https://github.com/masawada/mdp/compare/v0.3.1...v0.3.2) - 2026-02-07
 - Bump actions/setup-go from 6.1.0 to 6.2.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/23
 - Bump Songmu/tagpr from 1.11.0 to 1.12.1 by @dependabot[bot] in https://github.com/masawada/mdp/pull/24
