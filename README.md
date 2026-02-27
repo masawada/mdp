@@ -28,9 +28,20 @@ mdp [options] <markdown-file>
 
 ## Installation
 
-### Download binary
+### Homebrew (Recommended)
 
-Download the latest binary from [Releases](https://github.com/masawada/mdp/releases) and place it in your `$PATH`.
+```bash
+brew install masawada/tap/mdp
+```
+
+### GitHub Releases
+
+Download the latest archive from [GitHub Releases](https://github.com/masawada/mdp/releases) and install:
+
+```bash
+tar xzf mdp_*.tar.gz
+sudo install mdp /usr/local/bin/
+```
 
 ### Go
 
@@ -40,10 +51,11 @@ $ go install github.com/masawada/mdp/cmd/mdp@latest
 
 ### Build from source
 
-```console
-$ git clone https://github.com/masawada/mdp.git
-$ cd mdp
-$ make
+```bash
+git clone https://github.com/masawada/mdp.git
+cd mdp
+make
+sudo install mdp /usr/local/bin/
 ```
 
 ## Configuration
