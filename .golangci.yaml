@@ -24,6 +24,11 @@ linters:
     - wrapcheck
     - mnd
     - noctx
+  settings:
+    gosec:
+      excludes:
+        - G703 # Path traversal via taint analysis: CLI tool intentionally accepts user-specified paths
+        - G705 # XSS via taint analysis: CLI stdout output, XSS not applicable
   exclusions:
     rules:
       - path: '(.+)_test\.go'
