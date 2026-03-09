@@ -14,6 +14,9 @@ fi
 
 FAILED=0
 
+tmpdir=$(mktemp -d)
+trap "rm -rf $tmpdir" EXIT
+
 for md_file in "$TESTDATA_DIR"/*.md; do
     name=$(basename "$md_file" .md)
     expected_file="$TESTDATA_DIR/$name.html"
@@ -23,17 +26,17 @@ for md_file in "$TESTDATA_DIR"/*.md; do
         continue
     fi
 
-    tmpdir=$(mktemp -d)
-    trap "rm -rf $tmpdir" EXIT
+    test_dir="$tmpdir/$name"
+    mkdir -p "$test_dir"
 
-    config_file="$tmpdir/config.yaml"
-    output_dir="$tmpdir/output"
+    config_file="$test_dir/config.yaml"
+    output_dir="$test_dir/output"
 
     # Check if theme file exists for this test
     theme_file="$TESTDATA_DIR/$name.theme.html"
     if [[ -f "$theme_file" ]]; then
         # Setup theme
-        themes_dir="$tmpdir/themes"
+        themes_dir="$test_dir/themes"
         mkdir -p "$themes_dir"
         cp "$theme_file" "$themes_dir/test-theme.html"
         cat > "$config_file" <<EOF
