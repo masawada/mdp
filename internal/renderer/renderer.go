@@ -12,6 +12,7 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -26,14 +27,23 @@ type templateData struct {
 	Content template.HTML
 }
 
+// Options holds optional settings for the Renderer.
+type Options struct {
+	HardWraps bool
+}
+
 // NewRenderer creates a new Renderer with the specified theme.
-func NewRenderer(configDir string, themeName string) (*Renderer, error) {
-	md := goldmark.New(
+func NewRenderer(configDir string, themeName string, opts Options) (*Renderer, error) {
+	gmOpts := []goldmark.Option{
 		goldmark.WithExtensions(
 			extension.GFM,
 			meta.Meta,
 		),
-	)
+	}
+	if opts.HardWraps {
+		gmOpts = append(gmOpts, goldmark.WithRendererOptions(html.WithHardWraps()))
+	}
+	md := goldmark.New(gmOpts...)
 
 	if themeName == "" {
 		return &Renderer{tmpl: nil, md: md}, nil
