@@ -30,6 +30,7 @@ type templateData struct {
 // Options holds optional settings for the Renderer.
 type Options struct {
 	HardWraps bool
+	Unsafe    bool
 }
 
 // NewRenderer creates a new Renderer with the specified theme.
@@ -43,6 +44,9 @@ func NewRenderer(configDir string, themeName string, opts Options) (*Renderer, e
 	}
 	if opts.HardWraps {
 		gmOpts = append(gmOpts, goldmark.WithRendererOptions(html.WithHardWraps()))
+	}
+	if opts.Unsafe {
+		gmOpts = append(gmOpts, goldmark.WithRendererOptions(html.WithUnsafe()))
 	}
 	md := goldmark.New(gmOpts...)
 

@@ -82,6 +82,7 @@ type Config struct {
 	BrowserCommand string `yaml:"browser_command"`
 	Theme          string `yaml:"theme"`
 	HardWraps      bool   `yaml:"hard_wraps"`
+	Unsafe         bool   `yaml:"unsafe"`
 	ConfigDir      string `yaml:"-"`
 }
 

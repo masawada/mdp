@@ -446,6 +446,40 @@ func TestLoad(t *testing.T) {
 		}
 	})
 
+	t.Run("unsafe field is loaded correctly", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("unsafe: true\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if !cfg.Unsafe {
+			t.Error("Unsafe should be true")
+		}
+	})
+
+	t.Run("unsafe defaults to false when omitted", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("output_dir: /custom/output\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.Unsafe {
+			t.Error("Unsafe should default to false")
+		}
+	})
+
 	t.Run("expands tilde in output_dir", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		homeDir := filepath.Join(tmpDir, "home")
