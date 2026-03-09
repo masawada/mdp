@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.4.0](https://github.com/masawada/mdp/compare/v0.3.3...v0.4.0) - 2026-03-09
+- Bump actions/setup-go from 6.2.0 to 6.3.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/38
+- Bump goreleaser/goreleaser-action from 6.4.0 to 7.0.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/39
+- Bump go version to 1.25.8 to fix govulncheck vulnerabilities by @masawada in https://github.com/masawada/mdp/pull/42
+- Fix trap overwrite in e2e/run.sh to clean up all temp directories by @masawada in https://github.com/masawada/mdp/pull/41
+- Add footnote extension support by @masawada in https://github.com/masawada/mdp/pull/43
+- Add hard_wraps config option by @masawada in https://github.com/masawada/mdp/pull/44
+- Add unsafe config option by @masawada in https://github.com/masawada/mdp/pull/45
+
 ## [v0.3.3](https://github.com/masawada/mdp/compare/v0.3.2...v0.3.3) - 2026-02-27
 - Fix deprecated archives.format in goreleaser config by @masawada in https://github.com/masawada/mdp/pull/33
 - Exclude gosec taint analysis rules (G703, G705) for CLI tool by @masawada in https://github.com/masawada/mdp/pull/36
