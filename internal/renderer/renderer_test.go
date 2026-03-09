@@ -316,4 +316,41 @@ More text here.
 			t.Errorf("Render() without HardWraps should not contain <br>, got %q", result)
 		}
 	})
+
+	t.Run("renders raw HTML when unsafe is enabled", func(t *testing.T) {
+		r, err := NewRenderer("", "", Options{Unsafe: true})
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("<div class=\"custom\">text</div>\n"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, "<div class=\"custom\">text</div>") {
+			t.Errorf("Render() with Unsafe should contain raw HTML, got %q", result)
+		}
+	})
+
+	t.Run("sanitizes raw HTML when unsafe is disabled", func(t *testing.T) {
+		r, err := NewRenderer("", "", Options{Unsafe: false})
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("<div class=\"custom\">text</div>\n"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if strings.Contains(result, "<div class=\"custom\">") {
+			t.Errorf("Render() without Unsafe should not contain raw HTML, got %q", result)
+		}
+		if !strings.Contains(result, "<!-- raw HTML omitted -->") {
+			t.Errorf("Render() without Unsafe should contain raw HTML omitted comment, got %q", result)
+		}
+	})
 }
