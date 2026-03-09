@@ -35,7 +35,8 @@ func (c *cli) run(filePath string, watchMode bool, cfg *config.Config) int {
 		return 1
 	}
 
-	r, err := renderer.NewRenderer(cfg.ConfigDir, cfg.Theme, renderer.Options{HardWraps: cfg.HardWraps, Unsafe: cfg.Unsafe})
+	opts := renderer.Options{HardWraps: cfg.HardWraps, Unsafe: cfg.Unsafe}
+	r, err := renderer.NewRenderer(cfg.ConfigDir, cfg.Theme, opts)
 	if err != nil {
 		c.errorf("error: failed to initialize renderer: %v\n", err)
 		return 1
