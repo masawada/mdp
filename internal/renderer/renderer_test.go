@@ -229,7 +229,7 @@ More content.
 	})
 
 	t.Run("renders footnotes", func(t *testing.T) {
-		r, err := NewRenderer("", "")
+		r, err := NewRenderer("", "", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
