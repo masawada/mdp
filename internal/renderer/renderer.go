@@ -37,6 +37,7 @@ func NewRenderer(configDir string, themeName string, opts Options) (*Renderer, e
 	gmOpts := []goldmark.Option{
 		goldmark.WithExtensions(
 			extension.GFM,
+			extension.Footnote,
 			meta.Meta,
 		),
 	}

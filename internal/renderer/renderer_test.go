@@ -228,6 +228,28 @@ More content.
 		}
 	})
 
+	t.Run("renders footnotes", func(t *testing.T) {
+		r, err := NewRenderer("", "")
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		markdown := []byte("This has a footnote[^1].\n\n[^1]: Footnote content.\n")
+
+		html, err := r.Render(markdown)
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, "footnote-ref") {
+			t.Errorf("Render() should contain footnote-ref link, got %q", result)
+		}
+		if !strings.Contains(result, "footnote-backref") {
+			t.Errorf("Render() should contain footnote-backref link, got %q", result)
+		}
+	})
+
 	t.Run("returns Untitled when no front-matter and no heading", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		themesDir := filepath.Join(tmpDir, "themes")
