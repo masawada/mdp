@@ -83,6 +83,12 @@ browser_command: open
 
 # Theme name (optional, looks for themes/<name>.html in config directory)
 theme: custom
+
+# Convert newlines in paragraphs to <br> (default: false)
+hard_wraps: false
+
+# Allow raw HTML in markdown (default: false)
+unsafe: false
 ```
 
 ## Themes
