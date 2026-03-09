@@ -31,6 +31,7 @@ func NewRenderer(configDir string, themeName string) (*Renderer, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(
 			extension.GFM,
+			extension.Footnote,
 			meta.Meta,
 		),
 	)
