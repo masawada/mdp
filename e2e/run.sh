@@ -51,6 +51,12 @@ browser_command: echo
 EOF
     fi
 
+    # Append extra config if exists
+    extra_config="$TESTDATA_DIR/$name.config.yaml"
+    if [[ -f "$extra_config" ]]; then
+        cat "$extra_config" >> "$config_file"
+    fi
+
     abs_md_path=$(cd "$(dirname "$md_file")" && pwd)/$(basename "$md_file")
 
     if ! "$MDP_BIN" --config "$config_file" "$abs_md_path" > /dev/null 2>&1; then

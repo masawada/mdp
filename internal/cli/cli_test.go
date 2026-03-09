@@ -190,7 +190,7 @@ func TestConvert(t *testing.T) {
 		errWriter: &errBuf,
 	}
 
-	r, err := renderer.NewRenderer("", "")
+	r, err := renderer.NewRenderer("", "", renderer.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func TestRunWatchLoop_SignalHandling(t *testing.T) {
 		errWriter: &errBuf,
 	}
 
-	r, _ := renderer.NewRenderer("", "")
+	r, _ := renderer.NewRenderer("", "", renderer.Options{})
 	w := output.NewWriter(outDir)
 
 	// Create channel for signal injection

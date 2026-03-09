@@ -81,6 +81,7 @@ type Config struct {
 	OutputDir      string `yaml:"output_dir"`
 	BrowserCommand string `yaml:"browser_command"`
 	Theme          string `yaml:"theme"`
+	HardWraps      bool   `yaml:"hard_wraps"`
 	ConfigDir      string `yaml:"-"`
 }
 

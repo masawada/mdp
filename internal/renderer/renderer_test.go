@@ -15,7 +15,7 @@ const testTitleTemplate = `<!DOCTYPE html>
 
 func TestNewRenderer(t *testing.T) {
 	t.Run("returns renderer without template when themeName is empty", func(t *testing.T) {
-		r, err := NewRenderer("", "")
+		r, err := NewRenderer("", "", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -36,7 +36,7 @@ func TestNewRenderer(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r, err := NewRenderer(tmpDir, "test-theme")
+		r, err := NewRenderer(tmpDir, "test-theme", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -48,7 +48,7 @@ func TestNewRenderer(t *testing.T) {
 	t.Run("returns error when theme file does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		_, err := NewRenderer(tmpDir, "nonexistent-theme")
+		_, err := NewRenderer(tmpDir, "nonexistent-theme", Options{})
 		if err == nil {
 			t.Error("NewRenderer() should return error when theme file does not exist")
 		}
@@ -66,7 +66,7 @@ func TestNewRenderer(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err := NewRenderer(tmpDir, "invalid-theme")
+		_, err := NewRenderer(tmpDir, "invalid-theme", Options{})
 		if err == nil {
 			t.Error("NewRenderer() should return error when template is invalid")
 		}
@@ -75,7 +75,7 @@ func TestNewRenderer(t *testing.T) {
 
 func TestRender(t *testing.T) {
 	t.Run("converts markdown to html without theme", func(t *testing.T) {
-		r, err := NewRenderer("", "")
+		r, err := NewRenderer("", "", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -103,7 +103,7 @@ func TestRender(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r, err := NewRenderer(tmpDir, "test-theme")
+		r, err := NewRenderer(tmpDir, "test-theme", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -134,7 +134,7 @@ func TestRender(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r, err := NewRenderer(tmpDir, "test-theme")
+		r, err := NewRenderer(tmpDir, "test-theme", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -166,7 +166,7 @@ func TestRender(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r, err := NewRenderer(tmpDir, "test-theme")
+		r, err := NewRenderer(tmpDir, "test-theme", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -203,7 +203,7 @@ Content here.
 			t.Fatal(err)
 		}
 
-		r, err := NewRenderer(tmpDir, "test-theme")
+		r, err := NewRenderer(tmpDir, "test-theme", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -229,7 +229,7 @@ More content.
 	})
 
 	t.Run("renders footnotes", func(t *testing.T) {
-		r, err := NewRenderer("", "")
+		r, err := NewRenderer("", "", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -262,7 +262,7 @@ More content.
 			t.Fatal(err)
 		}
 
-		r, err := NewRenderer(tmpDir, "test-theme")
+		r, err := NewRenderer(tmpDir, "test-theme", Options{})
 		if err != nil {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
@@ -280,6 +280,40 @@ More text here.
 		result := string(html)
 		if !strings.Contains(result, "<title>Untitled</title>") {
 			t.Errorf("Expected title 'Untitled', got: %s", result)
+		}
+	})
+
+	t.Run("renders hard wraps when enabled", func(t *testing.T) {
+		r, err := NewRenderer("", "", Options{HardWraps: true})
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("line1\nline2\n"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, "<br") {
+			t.Errorf("Render() with HardWraps should contain <br>, got %q", result)
+		}
+	})
+
+	t.Run("does not render hard wraps when disabled", func(t *testing.T) {
+		r, err := NewRenderer("", "", Options{HardWraps: false})
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("line1\nline2\n"))
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if strings.Contains(result, "<br") {
+			t.Errorf("Render() without HardWraps should not contain <br>, got %q", result)
 		}
 	})
 }

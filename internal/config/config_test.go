@@ -412,6 +412,40 @@ func TestLoad(t *testing.T) {
 		}
 	})
 
+	t.Run("hard_wraps field is loaded correctly", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("hard_wraps: true\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if !cfg.HardWraps {
+			t.Error("HardWraps should be true")
+		}
+	})
+
+	t.Run("hard_wraps defaults to false when omitted", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.yaml")
+		content := []byte("output_dir: /custom/output\n")
+		if err := os.WriteFile(configFile, content, 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+
+		cfg, err := Load(configFile)
+		if err != nil {
+			t.Fatalf("Load() returned error: %v", err)
+		}
+		if cfg.HardWraps {
+			t.Error("HardWraps should default to false")
+		}
+	})
+
 	t.Run("expands tilde in output_dir", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		homeDir := filepath.Join(tmpDir, "home")
