@@ -6,7 +6,7 @@ require gopkg.in/yaml.v3 v3.0.1
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/yuin/goldmark v1.7.17
+	github.com/yuin/goldmark v1.8.2
 	github.com/yuin/goldmark-meta v1.1.0
 )
 
