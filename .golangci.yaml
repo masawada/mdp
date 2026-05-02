@@ -38,6 +38,7 @@ linters:
           - gocognit
           - funlen
           - maintidx
+          - goconst
 
 formatters:
   enable:
