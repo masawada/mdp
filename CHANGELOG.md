@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.1](https://github.com/masawada/mdp/compare/v0.4.0...v0.4.1) - 2026-05-02
+- Add hard_wraps and unsafe options to README by @masawada in https://github.com/masawada/mdp/pull/46
+- Bump codecov/codecov-action from 5.5.2 to 5.5.3 by @dependabot[bot] in https://github.com/masawada/mdp/pull/48
+- Bump github.com/yuin/goldmark from 1.7.16 to 1.7.17 by @dependabot[bot] in https://github.com/masawada/mdp/pull/49
+- Bump github.com/yuin/goldmark from 1.7.17 to 1.8.2 by @dependabot[bot] in https://github.com/masawada/mdp/pull/51
+- Bump codecov/codecov-action from 5.5.3 to 6.0.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/50
+- Bump actions/setup-go from 6.3.0 to 6.4.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/52
+- fix CI: exclude goconst in tests and bump go to 1.25.9 by @masawada in https://github.com/masawada/mdp/pull/58
+- Bump Songmu/tagpr from 1.17.1 to 1.18.3 by @dependabot[bot] in https://github.com/masawada/mdp/pull/54
+- Bump goreleaser/goreleaser-action from 7.0.0 to 7.2.1 by @dependabot[bot] in https://github.com/masawada/mdp/pull/57
+- Bump github.com/fsnotify/fsnotify from 1.9.0 to 1.10.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/56
+
 ## [v0.4.0](https://github.com/masawada/mdp/compare/v0.3.3...v0.4.0) - 2026-03-09
 - Bump actions/setup-go from 6.2.0 to 6.3.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/38
 - Bump goreleaser/goreleaser-action from 6.4.0 to 7.0.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/39
