@@ -19,6 +19,7 @@ linters:
     - varnamelen
     - testpackage
     - exhaustruct
+    - exhaustruct_v5
     - gochecknoglobals
     - err113
     - wrapcheck
