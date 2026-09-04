@@ -64,15 +64,14 @@ sudo install mdp /usr/local/bin/
 
 ## Configuration
 
-`mdp` looks for a configuration file in these locations, in order:
+`mdp` reads the file given by `--config`. Without the flag, it looks for a configuration file in these locations, in order:
 
-1. `--config` flag (explicit path)
-2. `$UserConfigDir/mdp/config.yaml`
-3. `$UserConfigDir/mdp/config.yml`
-4. `$HOME/.config/mdp/config.yaml`
-5. `$HOME/.config/mdp/config.yml`
+1. `$UserConfigDir/mdp/config.yaml`
+2. `$UserConfigDir/mdp/config.yml`
+3. `$HOME/.config/mdp/config.yaml`
+4. `$HOME/.config/mdp/config.yml`
 
-If none of them exists, it uses the defaults.
+If no file is found, it uses the defaults.
 
 `$UserConfigDir` comes from `os.UserConfigDir()`:
 
