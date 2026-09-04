@@ -13,6 +13,27 @@ const testTitleTemplate = `<!DOCTYPE html>
 <body>{{.Content}}</body>
 </html>`
 
+// newThemedRenderer creates a Renderer whose theme template is the given content.
+func newThemedRenderer(t *testing.T, themeContent string) *Renderer {
+	t.Helper()
+	tmpDir := t.TempDir()
+	themesDir := filepath.Join(tmpDir, "themes")
+	if err := os.MkdirAll(themesDir, 0755); err != nil { //nolint:gosec // G301: test directory
+		t.Fatal(err)
+	}
+	themeFile := filepath.Join(themesDir, "test-theme.html")
+	//nolint:gosec // G306: test file
+	if err := os.WriteFile(themeFile, []byte(themeContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	r, err := NewRenderer(tmpDir, "test-theme", Options{})
+	if err != nil {
+		t.Fatalf("NewRenderer() returned error: %v", err)
+	}
+	return r
+}
+
 func TestNewRenderer(t *testing.T) {
 	t.Run("returns renderer without template when themeName is empty", func(t *testing.T) {
 		r, err := NewRenderer("", "", Options{})
@@ -80,7 +101,7 @@ func TestRender(t *testing.T) {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("# Hello"))
+		html, err := r.Render([]byte("# Hello"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -108,7 +129,7 @@ func TestRender(t *testing.T) {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("# Hello"))
+		html, err := r.Render([]byte("# Hello"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -139,7 +160,7 @@ func TestRender(t *testing.T) {
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("**bold**"))
+		html, err := r.Render([]byte("**bold**"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -180,7 +201,7 @@ title: Front-matter Title
 Content here.
 `)
 
-		html, err := r.Render(markdown)
+		html, err := r.Render(markdown, "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -217,7 +238,7 @@ Some content.
 More content.
 `)
 
-		html, err := r.Render(markdown)
+		html, err := r.Render(markdown, "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -236,7 +257,7 @@ More content.
 
 		markdown := []byte("This has a footnote[^1].\n\n[^1]: Footnote content.\n")
 
-		html, err := r.Render(markdown)
+		html, err := r.Render(markdown, "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -272,7 +293,7 @@ More content.
 More text here.
 `)
 
-		html, err := r.Render(markdown)
+		html, err := r.Render(markdown, "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -289,7 +310,7 @@ More text here.
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("line1\nline2\n"))
+		html, err := r.Render([]byte("line1\nline2\n"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -306,7 +327,7 @@ More text here.
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("line1\nline2\n"))
+		html, err := r.Render([]byte("line1\nline2\n"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -323,7 +344,7 @@ More text here.
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("<div class=\"custom\">text</div>\n"))
+		html, err := r.Render([]byte("<div class=\"custom\">text</div>\n"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -340,7 +361,7 @@ More text here.
 			t.Fatalf("NewRenderer() returned error: %v", err)
 		}
 
-		html, err := r.Render([]byte("<div class=\"custom\">text</div>\n"))
+		html, err := r.Render([]byte("<div class=\"custom\">text</div>\n"), "")
 		if err != nil {
 			t.Fatalf("Render() returned error: %v", err)
 		}
@@ -351,6 +372,59 @@ More text here.
 		}
 		if !strings.Contains(result, "<!-- raw HTML omitted -->") {
 			t.Errorf("Render() without Unsafe should contain raw HTML omitted comment, got %q", result)
+		}
+	})
+
+	t.Run("resolves relative image path against baseDir", func(t *testing.T) {
+		r, err := NewRenderer("", "", Options{})
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("![alt](images/a.png)\n"), "/Users/you/docs")
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		expected := `<img src="file:///Users/you/docs/images/a.png" alt="alt">`
+		if !strings.Contains(result, expected) {
+			t.Errorf("Render() = %q, want to contain %q", result, expected)
+		}
+	})
+
+	t.Run("resolves raw HTML img when unsafe is enabled", func(t *testing.T) {
+		r, err := NewRenderer("", "", Options{Unsafe: true})
+		if err != nil {
+			t.Fatalf("NewRenderer() returned error: %v", err)
+		}
+
+		html, err := r.Render([]byte("<img src=\"a.png\" width=\"300\">\n"), "/Users/you/docs")
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		expected := `<img src="file:///Users/you/docs/a.png" width="300">`
+		if !strings.Contains(result, expected) {
+			t.Errorf("Render() = %q, want to contain %q", result, expected)
+		}
+	})
+
+	t.Run("does not resolve image path in theme template", func(t *testing.T) {
+		r := newThemedRenderer(t, `<img src="logo.png">{{.Content}}`)
+
+		html, err := r.Render([]byte("![alt](a.png)\n"), "/Users/you/docs")
+		if err != nil {
+			t.Fatalf("Render() returned error: %v", err)
+		}
+
+		result := string(html)
+		if !strings.Contains(result, `<img src="logo.png">`) {
+			t.Errorf("Render() should leave theme img untouched, got %q", result)
+		}
+		if !strings.Contains(result, `<img src="file:///Users/you/docs/a.png" alt="alt">`) {
+			t.Errorf("Render() should resolve content img, got %q", result)
 		}
 	})
 }

@@ -107,7 +107,7 @@ func (c *cli) convert(filePath string, r *renderer.Renderer, w *output.Writer) (
 	}
 
 	// Render markdown to HTML
-	html, err := r.Render(markdown)
+	html, err := r.Render(markdown, filepath.Dir(filePath))
 	if err != nil {
 		return "", fmt.Errorf("failed to render: %w", err)
 	}
