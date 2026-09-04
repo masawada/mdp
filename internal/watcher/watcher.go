@@ -2,6 +2,7 @@
 package watcher
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,44 +14,53 @@ import (
 // Watcher watches for file changes.
 type Watcher struct {
 	fsWatcher *fsnotify.Watcher
-	filePath  string
-	fileName  string
-	events    chan struct{}
-	errors    chan error
-	done      chan struct{}
+	// watched holds the absolute paths of the files to watch.
+	watched map[string]bool
+	events  chan string
+	errors  chan error
+	done    chan struct{}
 }
 
-// New creates a new Watcher for the specified file.
-func New(filePath string) (*Watcher, error) {
-	// Check if file exists
-	if _, err := os.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("file not found: %w", err)
+// New creates a new Watcher for the specified files.
+func New(filePaths ...string) (*Watcher, error) {
+	if len(filePaths) == 0 {
+		return nil, errors.New("no files to watch")
 	}
 
-	// Get absolute path and directory
-	absPath, err := filepath.Abs(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get absolute path: %w", err)
+	watched := make(map[string]bool, len(filePaths))
+	dirs := make(map[string]bool)
+	for _, filePath := range filePaths {
+		// Check if file exists
+		if _, err := os.Stat(filePath); err != nil {
+			return nil, fmt.Errorf("file not found: %w", err)
+		}
+
+		// Get absolute path and directory
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get absolute path: %w", err)
+		}
+		watched[absPath] = true
+		dirs[filepath.Dir(absPath)] = true
 	}
-	dir := filepath.Dir(absPath)
-	fileName := filepath.Base(absPath)
 
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	// Watch the directory instead of the file
-	if err := fsWatcher.Add(dir); err != nil {
-		_ = fsWatcher.Close()
-		return nil, fmt.Errorf("failed to watch directory: %w", err)
+	// Watch the directories instead of the files
+	for dir := range dirs {
+		if err := fsWatcher.Add(dir); err != nil {
+			_ = fsWatcher.Close()
+			return nil, fmt.Errorf("failed to watch directory: %w", err)
+		}
 	}
 
 	w := &Watcher{
 		fsWatcher: fsWatcher,
-		filePath:  absPath,
-		fileName:  fileName,
-		events:    make(chan struct{}),
+		watched:   watched,
+		events:    make(chan string),
 		errors:    make(chan error),
 		done:      make(chan struct{}),
 	}
@@ -69,8 +79,8 @@ func (w *Watcher) Start() {
 	go w.loop()
 }
 
-// Events returns a channel that receives notifications when the file changes.
-func (w *Watcher) Events() <-chan struct{} {
+// Events returns a channel that receives the absolute path of a file when it changes.
+func (w *Watcher) Events() <-chan string {
 	return w.events
 }
 
@@ -81,8 +91,8 @@ func (w *Watcher) Errors() <-chan error {
 
 //nolint:cyclop // complexity is acceptable for event loop with debouncing
 func (w *Watcher) loop() {
-	// Debounce timer to coalesce rapid events
-	var debounceTimer *time.Timer
+	// Debounce timers per file to coalesce rapid events
+	debounceTimers := make(map[string]*time.Timer)
 	const debounceInterval = 100 * time.Millisecond
 
 	for {
@@ -93,19 +103,19 @@ func (w *Watcher) loop() {
 			if !ok {
 				return
 			}
-			// Filter events by target file name
-			if filepath.Base(event.Name) != w.fileName {
+			// Filter events by watched files
+			if !w.watched[event.Name] {
 				continue
 			}
 			// Handle Write and Create events (Create handles atomic saves)
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 				// Debounce: reset timer on each event
-				if debounceTimer != nil {
-					debounceTimer.Stop()
+				if timer := debounceTimers[event.Name]; timer != nil {
+					timer.Stop()
 				}
-				debounceTimer = time.AfterFunc(debounceInterval, func() {
+				debounceTimers[event.Name] = time.AfterFunc(debounceInterval, func() {
 					select {
-					case w.events <- struct{}{}:
+					case w.events <- event.Name:
 					case <-w.done:
 					}
 				})

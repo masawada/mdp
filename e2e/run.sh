@@ -17,6 +17,41 @@ FAILED=0
 tmpdir=$(mktemp -d)
 trap "rm -rf $tmpdir" EXIT
 
+# generated_path prints where mdp writes the HTML for an absolute markdown path
+generated_path() {
+    local output_dir="$1" abs_md_path="$2"
+    local path_without_ext="${abs_md_path%.md}"
+    echo "$output_dir/${path_without_ext#/}/index.html"
+}
+
+# check_output compares a generated HTML file with its expected HTML.
+# Prints PASS/FAIL with the given label and returns non-zero on failure.
+check_output() {
+    local label="$1" expected_file="$2" generated_file="$3" work_dir="$4"
+
+    if [[ ! -f "$generated_file" ]]; then
+        echo "FAIL: $label (output not found)"
+        return 1
+    fi
+
+    # Expected html uses placeholders for the directories in file:// image URLs
+    local resolved_expected_file="$work_dir/expected.html"
+    sed -e "s|__TESTDATA_DIR__|$TESTDATA_DIR|g" -e "s|__E2E_DIR__|$SCRIPT_DIR|g" "$expected_file" > "$resolved_expected_file"
+
+    if diff -q "$resolved_expected_file" "$generated_file" > /dev/null 2>&1; then
+        echo "PASS: $label"
+        return 0
+    fi
+
+    echo "FAIL: $label (content mismatch)"
+    echo "--- Expected ---"
+    cat "$resolved_expected_file"
+    echo "--- Actual ---"
+    cat "$generated_file"
+    echo "----------------"
+    return 1
+}
+
 for md_file in "$TESTDATA_DIR"/*.md; do
     name=$(basename "$md_file" .md)
     expected_file="$TESTDATA_DIR/$name.html"
@@ -65,31 +100,59 @@ EOF
         continue
     fi
 
-    path_without_ext="${abs_md_path%.md}"
-    relative_path="${path_without_ext#/}"
-    generated_file="$output_dir/$relative_path/index.html"
-
-    if [[ ! -f "$generated_file" ]]; then
-        echo "FAIL: $name (output not found)"
-        FAILED=1
-        continue
-    fi
-
-    # Expected html uses placeholders for the directories in file:// image URLs
-    resolved_expected_file="$test_dir/expected.html"
-    sed -e "s|__TESTDATA_DIR__|$TESTDATA_DIR|g" -e "s|__E2E_DIR__|$SCRIPT_DIR|g" "$expected_file" > "$resolved_expected_file"
-
-    if diff -q "$resolved_expected_file" "$generated_file" > /dev/null 2>&1; then
-        echo "PASS: $name"
-    else
-        echo "FAIL: $name (content mismatch)"
-        echo "--- Expected ---"
-        cat "$resolved_expected_file"
-        echo "--- Actual ---"
-        cat "$generated_file"
-        echo "----------------"
+    generated_file=$(generated_path "$output_dir" "$abs_md_path")
+    if ! check_output "$name" "$expected_file" "$generated_file" "$test_dir"; then
         FAILED=1
     fi
 done
+
+# Multiple files: every file is converted and the browser is opened once per file
+multi_name="multiple-files"
+multi_dir="$tmpdir/$multi_name"
+mkdir -p "$multi_dir"
+multi_config="$multi_dir/config.yaml"
+multi_output="$multi_dir/output"
+
+# The browser command records every path it is asked to open
+multi_opened_log="$multi_dir/opened.log"
+multi_browser="$multi_dir/browser.sh"
+cat > "$multi_browser" <<EOF
+#!/bin/bash
+echo "\$1" >> "$multi_opened_log"
+EOF
+chmod +x "$multi_browser"
+
+cat > "$multi_config" <<EOF
+output_dir: $multi_output
+browser_command: $multi_browser
+EOF
+
+multi_files=("$TESTDATA_DIR/simple.md" "$TESTDATA_DIR/gfm.md")
+
+if ! "$MDP_BIN" --config "$multi_config" "${multi_files[@]}" > /dev/null 2>&1; then
+    echo "FAIL: $multi_name (command failed)"
+    FAILED=1
+else
+    touch "$multi_opened_log"
+    opened_total=$(wc -l < "$multi_opened_log" | tr -d ' ')
+    if [[ "$opened_total" != "${#multi_files[@]}" ]]; then
+        echo "FAIL: $multi_name (browser opened $opened_total times, want ${#multi_files[@]})"
+        FAILED=1
+    fi
+    for md_file in "${multi_files[@]}"; do
+        name=$(basename "$md_file" .md)
+        generated_file=$(generated_path "$multi_output" "$md_file")
+        if ! check_output "$multi_name ($name)" "$TESTDATA_DIR/$name.html" "$generated_file" "$multi_dir"; then
+            FAILED=1
+            continue
+        fi
+
+        opened=$(grep -Fxc "$generated_file" "$multi_opened_log" || true)
+        if [[ "$opened" != "1" ]]; then
+            echo "FAIL: $multi_name ($name) (browser opened $opened times, want 1)"
+            FAILED=1
+        fi
+    done
+fi
 
 exit $FAILED

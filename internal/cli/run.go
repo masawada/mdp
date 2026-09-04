@@ -8,7 +8,7 @@ import (
 	"github.com/masawada/mdp/internal/config"
 )
 
-const usageMessage = `usage: mdp [options] <markdown-file>
+const usageMessage = `usage: mdp [options] <markdown-file>...
 
 Options:
   --config <config-file>  path to config file
@@ -26,7 +26,7 @@ func Run() int {
 			return 0
 		}
 		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		_, _ = fmt.Fprintln(os.Stderr, "usage: mdp [--config <config-file>] [--help] <markdown-file>")
+		_, _ = fmt.Fprintln(os.Stderr, "usage: mdp [--config <config-file>] [--help] <markdown-file>...")
 		return 1
 	}
 
@@ -50,5 +50,5 @@ func Run() int {
 		return c.listFiles(cfg)
 	}
 
-	return c.run(args.filePath, args.watchMode, cfg)
+	return c.run(args.filePaths, args.watchMode, cfg)
 }

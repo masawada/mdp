@@ -23,7 +23,7 @@ func TestRun_FileNotFound(t *testing.T) {
 	}
 
 	cfg := &config.Config{}
-	exitCode := c.run("/nonexistent/file.md", false, cfg)
+	exitCode := c.run([]string{"/nonexistent/file.md"}, false, cfg)
 	if exitCode != 1 {
 		t.Errorf("run() exit code = %d, want 1", exitCode)
 	}
@@ -58,7 +58,7 @@ func TestRun_Success(t *testing.T) {
 		errWriter: &stderr,
 	}
 
-	exitCode := c.run(mdFile, false, cfg)
+	exitCode := c.run([]string{mdFile}, false, cfg)
 	if exitCode != 0 {
 		t.Errorf("run() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
 	}
@@ -69,6 +69,194 @@ func TestRun_Success(t *testing.T) {
 	expectedHTML := filepath.Join(outputDir, relativePath, "index.html")
 	if _, err := os.Stat(expectedHTML); os.IsNotExist(err) {
 		t.Errorf("HTML file not created at %s", expectedHTML)
+	}
+}
+
+// expectedOutputPath returns the path where run() writes the HTML for mdFile.
+func expectedOutputPath(t *testing.T, outputDir, mdFile string) string {
+	t.Helper()
+	absPath, err := filepath.Abs(mdFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pathWithoutExt := strings.TrimSuffix(absPath, ".md")
+	relativePath := strings.TrimPrefix(pathWithoutExt, "/")
+	return filepath.Join(outputDir, relativePath, "index.html")
+}
+
+// loadTestConfig writes a config pointing at outputDir with a no-op browser and loads it.
+func loadTestConfig(t *testing.T, tmpDir, outputDir string) *config.Config {
+	t.Helper()
+	configFile := filepath.Join(tmpDir, "config.yaml")
+	configContent := fmt.Sprintf("output_dir: %s\nbrowser_command: echo\n", outputDir)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cfg
+}
+
+func TestRun_MultipleFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	mdFiles := []string{filepath.Join(tmpDir, "a.md"), filepath.Join(tmpDir, "b.md")}
+	for _, f := range mdFiles {
+		if err := os.WriteFile(f, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+	}
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run(mdFiles, false, cfg)
+	if exitCode != 0 {
+		t.Errorf("run() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
+	}
+
+	for _, f := range mdFiles {
+		expectedHTML := expectedOutputPath(t, outputDir, f)
+		if _, err := os.Stat(expectedHTML); os.IsNotExist(err) {
+			t.Errorf("HTML file not created at %s", expectedHTML)
+		}
+		if !strings.Contains(stdout.String(), "Generated: "+expectedHTML+"\n") {
+			t.Errorf("stdout should report %s, got: %s", expectedHTML, stdout.String())
+		}
+	}
+	if got := strings.Count(stdout.String(), "Generated: "); got != 2 {
+		t.Errorf("stdout should contain 2 Generated lines, got %d: %s", got, stdout.String())
+	}
+}
+
+func TestRun_DuplicateFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "a.md")
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run([]string{mdFile, mdFile}, false, cfg)
+	if exitCode != 0 {
+		t.Errorf("run() exit code = %d, want 0\nstderr: %s", exitCode, stderr.String())
+	}
+	if got := strings.Count(stdout.String(), "Generated: "); got != 1 {
+		t.Errorf("stdout should contain 1 Generated line, got %d: %s", got, stdout.String())
+	}
+}
+
+func TestRun_OneFileNotFound_GeneratesNothing(t *testing.T) {
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "a.md")
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+	missing := filepath.Join(tmpDir, "missing.md")
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run([]string{mdFile, missing}, false, cfg)
+	if exitCode != 1 {
+		t.Errorf("run() exit code = %d, want 1", exitCode)
+	}
+	if !strings.Contains(stderr.String(), "file not found: "+missing) {
+		t.Errorf("stderr should name the missing file, got: %s", stderr.String())
+	}
+	if stdout.String() != "" {
+		t.Errorf("stdout should be empty, got: %s", stdout.String())
+	}
+	if _, err := os.Stat(expectedOutputPath(t, outputDir, mdFile)); err == nil {
+		t.Errorf("HTML for existing file should not be generated when another file is missing")
+	}
+}
+
+func TestRun_StatError_GeneratesNothing(t *testing.T) {
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "a.md")
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+	// A self-referential symlink makes os.Stat fail with an error other than "not exist"
+	loop := filepath.Join(tmpDir, "loop.md")
+	if err := os.Symlink(loop, loop); err != nil {
+		t.Fatal(err)
+	}
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run([]string{mdFile, loop}, false, cfg)
+	if exitCode != 1 {
+		t.Errorf("run() exit code = %d, want 1", exitCode)
+	}
+	if !strings.Contains(stderr.String(), loop) {
+		t.Errorf("stderr should name the failing file, got: %s", stderr.String())
+	}
+	if _, err := os.Stat(expectedOutputPath(t, outputDir, mdFile)); err == nil {
+		t.Errorf("HTML for existing file should not be generated when another file cannot be stat'ed")
+	}
+}
+
+func TestRun_OutputPathCollision_GeneratesNothing(t *testing.T) {
+	tmpDir := t.TempDir()
+	// Different extensions with the same stem map to the same output path
+	mdFiles := []string{filepath.Join(tmpDir, "notes.md"), filepath.Join(tmpDir, "notes.markdown")}
+	for _, f := range mdFiles {
+		if err := os.WriteFile(f, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+	}
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run(mdFiles, false, cfg)
+	if exitCode != 1 {
+		t.Errorf("run() exit code = %d, want 1", exitCode)
+	}
+	if !strings.Contains(stderr.String(), "same output path") {
+		t.Errorf("stderr should explain the collision, got: %s", stderr.String())
+	}
+	if stdout.String() != "" {
+		t.Errorf("stdout should be empty, got: %s", stdout.String())
+	}
+	if _, err := os.Stat(expectedOutputPath(t, outputDir, mdFiles[0])); err == nil {
+		t.Errorf("HTML should not be generated when output paths collide")
 	}
 }
 
@@ -235,8 +423,64 @@ func TestRunWatchLoop_SignalHandling(t *testing.T) {
 		sigChan <- syscall.SIGINT
 	}()
 
-	exitCode := c.runWatchLoop(mdFile, r, w, sigChan)
+	exitCode := c.runWatchLoop([]string{mdFile}, r, w, sigChan)
 	if exitCode != 0 {
 		t.Errorf("runWatchLoop() returned %d, want 0", exitCode)
+	}
+}
+
+func TestRunWatchLoop_RegeneratesChangedFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	fileA := filepath.Join(tmpDir, "a.md")
+	fileB := filepath.Join(tmpDir, "b.md")
+	for _, f := range []string{fileA, fileB} {
+		if err := os.WriteFile(f, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file in temp dir
+			t.Fatal(err)
+		}
+	}
+
+	outDir := filepath.Join(tmpDir, "output")
+	var outBuf, errBuf bytes.Buffer
+
+	c := &cli{
+		outWriter: &outBuf,
+		errWriter: &errBuf,
+	}
+
+	r, _ := renderer.NewRenderer("", "", renderer.Options{})
+	w := output.NewWriter(outDir)
+
+	sigChan := make(chan os.Signal, 1)
+	outputB := expectedOutputPath(t, outDir, fileB)
+
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		_ = os.WriteFile(fileB, []byte("# Updated"), 0600)
+		// Stop once the regenerated file appears; the loop prints before it
+		// returns to select, so the signal is handled after the report
+		deadline := time.Now().Add(5 * time.Second)
+		for time.Now().Before(deadline) {
+			if _, err := os.Stat(outputB); err == nil {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		sigChan <- syscall.SIGINT
+	}()
+
+	exitCode := c.runWatchLoop([]string{fileA, fileB}, r, w, sigChan)
+	if exitCode != 0 {
+		t.Errorf("runWatchLoop() returned %d, want 0", exitCode)
+	}
+
+	if !strings.Contains(outBuf.String(), "Regenerated: "+outputB+"\n") {
+		t.Errorf("stdout should report regeneration of %s, got: %s", outputB, outBuf.String())
+	}
+	if _, err := os.Stat(outputB); err != nil {
+		t.Errorf("regenerated HTML not found: %v", err)
+	}
+	outputA := expectedOutputPath(t, outDir, fileA)
+	if strings.Contains(outBuf.String(), outputA) {
+		t.Errorf("unchanged file should not be regenerated, got: %s", outBuf.String())
 	}
 }

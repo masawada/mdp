@@ -14,7 +14,7 @@ var errHelp = errors.New("help requested")
 
 type parsedArgs struct {
 	configPath  string
-	filePath    string
+	filePaths   []string
 	showList    bool
 	showVersion bool
 	watchMode   bool
@@ -60,7 +60,7 @@ func parseArgs(args []string) (*parsedArgs, error) {
 
 	return &parsedArgs{
 		configPath: *configPath,
-		filePath:   fs.Arg(0),
+		filePaths:  fs.Args(),
 		watchMode:  *watchMode,
 	}, nil
 }

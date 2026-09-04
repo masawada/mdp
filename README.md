@@ -4,17 +4,26 @@ A Markdown previewer that shows markdown files in your browser.
 
 ## Description
 
-`mdp` converts a markdown file to HTML and opens it in your browser. It supports GitHub Flavored Markdown and custom themes.
+`mdp` converts markdown files to HTML and opens them in your browser. It supports GitHub Flavored Markdown and custom themes.
 
 ```console
 $ mdp README.md
 Generated: /Users/you/.mdp/README.html
 ```
 
+You can pass more than one file. Each file is converted and opened in its own tab, and `--watch` regenerates whichever file changes.
+
+```console
+$ mdp --watch README.md CHANGELOG.md
+Generated: /Users/you/.mdp/README.html
+Generated: /Users/you/.mdp/CHANGELOG.html
+Watching for changes... (Ctrl+C to stop)
+```
+
 ## Synopsis
 
 ```
-mdp [options] <markdown-file>
+mdp [options] <markdown-file>...
 ```
 
 ## Options
