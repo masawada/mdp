@@ -58,6 +58,10 @@ make
 sudo install mdp /usr/local/bin/
 ```
 
+## Images
+
+`mdp` rewrites relative image paths into `file://` URLs based on the directory of the markdown file, so the browser can show images next to the markdown without copying them. This works for both `![alt](path)` and raw `<img>` tags (with `unsafe: true`). URLs that already have a scheme, such as `https://` or `data:`, are not changed.
+
 ## Configuration
 
 Configuration file is loaded from the following locations in order of priority:
