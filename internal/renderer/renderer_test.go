@@ -166,7 +166,7 @@ func TestRender(t *testing.T) {
 		}
 
 		result := string(html)
-		// HTMLタグがエスケープされていないことを確認
+		// Verify HTML tags are not escaped
 		if strings.Contains(result, "&lt;strong&gt;") {
 			t.Errorf("Render() should not escape HTML tags, got %q", result)
 		}

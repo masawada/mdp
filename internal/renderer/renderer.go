@@ -74,16 +74,16 @@ func NewRenderer(configDir string, themeName string, opts Options) (*Renderer, e
 func (r *Renderer) Render(markdown []byte, baseDir string) ([]byte, error) {
 	context := parser.NewContext()
 
-	// パースは1回だけ
+	// Parse only once
 	doc := r.md.Parser().Parse(text.NewReader(markdown), parser.WithContext(context))
 
-	// AST からタイトルを抽出
+	// Extract the title from the AST
 	title, err := extractTitle(markdown, doc, context)
 	if err != nil {
 		return nil, err
 	}
 
-	// 同じ AST から HTML に変換
+	// Render HTML from the same AST
 	var buf bytes.Buffer
 	if err := r.md.Renderer().Render(&buf, markdown, doc); err != nil {
 		return nil, err
@@ -111,13 +111,13 @@ func (r *Renderer) Render(markdown []byte, baseDir string) ([]byte, error) {
 // extractTitle extracts the document title from markdown.
 // Priority: 1. Front-matter title, 2. First heading, 3. "Untitled".
 func extractTitle(source []byte, doc ast.Node, context parser.Context) (string, error) {
-	// Front-matter から取得
+	// From front-matter
 	metaData := meta.Get(context)
 	if title, ok := metaData["title"].(string); ok && title != "" {
 		return title, nil
 	}
 
-	// 最初の heading から取得
+	// From the first heading
 	heading, err := findFirstHeading(doc, source)
 	if err != nil {
 		return "", err
