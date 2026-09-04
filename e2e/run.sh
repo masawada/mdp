@@ -75,12 +75,16 @@ EOF
         continue
     fi
 
-    if diff -q "$expected_file" "$generated_file" > /dev/null 2>&1; then
+    # Expected html uses placeholders for the directories in file:// image URLs
+    resolved_expected_file="$test_dir/expected.html"
+    sed -e "s|__TESTDATA_DIR__|$TESTDATA_DIR|g" -e "s|__E2E_DIR__|$SCRIPT_DIR|g" "$expected_file" > "$resolved_expected_file"
+
+    if diff -q "$resolved_expected_file" "$generated_file" > /dev/null 2>&1; then
         echo "PASS: $name"
     else
         echo "FAIL: $name (content mismatch)"
         echo "--- Expected ---"
-        cat "$expected_file"
+        cat "$resolved_expected_file"
         echo "--- Actual ---"
         cat "$generated_file"
         echo "----------------"
