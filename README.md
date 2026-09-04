@@ -1,6 +1,6 @@
 # mdp
 
-Markdown previewer - preview markdown files in your browser.
+A Markdown previewer that shows markdown files in your browser.
 
 ## Description
 
@@ -28,7 +28,7 @@ mdp [options] <markdown-file>
 
 ## Installation
 
-### Homebrew (Recommended)
+### Homebrew (recommended)
 
 ```bash
 brew install masawada/tap/mdp
@@ -60,20 +60,20 @@ sudo install mdp /usr/local/bin/
 
 ## Images
 
-`mdp` rewrites relative image paths into `file://` URLs based on the directory of the markdown file, so the browser can show images next to the markdown without copying them. This works for both `![alt](path)` and raw `<img>` tags (with `unsafe: true`). URLs that already have a scheme, such as `https://` or `data:`, are not changed.
+`mdp` rewrites relative image paths into `file://` URLs based on the directory of the markdown file, so the browser can show images next to the markdown without copying them. This works for both `![alt](path)` and raw `<img>` tags (with `unsafe: true`). URLs that already have a scheme, such as `https://` or `data:`, stay as they are.
 
 ## Configuration
 
-Configuration file is loaded from the following locations in order of priority:
+`mdp` reads the file given by `--config`. Without the flag, it looks for a configuration file in these locations, in order:
 
-1. `--config` flag (explicit path)
-2. `$UserConfigDir/mdp/config.yaml`
-3. `$UserConfigDir/mdp/config.yml`
-4. `$HOME/.config/mdp/config.yaml`
-5. `$HOME/.config/mdp/config.yml`
-6. No config file (use defaults)
+1. `$UserConfigDir/mdp/config.yaml`
+2. `$UserConfigDir/mdp/config.yml`
+3. `$HOME/.config/mdp/config.yaml`
+4. `$HOME/.config/mdp/config.yml`
 
-`$UserConfigDir` is determined by `os.UserConfigDir()`:
+If no file is found, it uses the defaults.
+
+`$UserConfigDir` comes from `os.UserConfigDir()`:
 
 - macOS: `~/Library/Application Support`
 - Linux: `~/.config` (or `$XDG_CONFIG_HOME`)
@@ -97,9 +97,9 @@ unsafe: false
 
 ## Themes
 
-You can create custom themes by placing HTML template files in the `themes/` directory under your config directory.
+To create a custom theme, put an HTML template file in the `themes/` directory under your config directory.
 
-For example, to use a theme named `custom`, create `themes/custom.html` in your config directory:
+For example, a theme named `custom` lives at `themes/custom.html`:
 
 ```html
 <!DOCTYPE html>
@@ -117,16 +117,16 @@ For example, to use a theme named `custom`, create `themes/custom.html` in your 
 </html>
 ```
 
-### Template Variables
+### Template variables
 
 | Variable | Description |
 |----------|-------------|
 | `{{.Title}}` | Document title extracted from the markdown |
 | `{{.Content}}` | Rendered HTML content |
 
-### Title Extraction
+### Title extraction
 
-The title is extracted from the markdown file in the following order of priority:
+`mdp` picks the title from the markdown file in this order:
 
 1. `title` field in YAML front-matter
 2. First heading in the document
@@ -144,7 +144,7 @@ title: My Document Title
 Content here.
 ```
 
-In this case, `{{.Title}}` will be `"My Document Title"`.
+Here `{{.Title}}` is `"My Document Title"`.
 
 ## License
 
