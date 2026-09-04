@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.5.0](https://github.com/masawada/mdp/compare/v0.4.2...v0.5.0) - 2026-09-04
+
+- fix CI: bump go to 1.25.14 and disable exhaustruct_v5 by @masawada in https://github.com/masawada/mdp/pull/74
+- Bump Songmu/tagpr from 1.20.1 to 1.20.2 by @dependabot[bot] in https://github.com/masawada/mdp/pull/72
+- Bump actions/checkout from 7.0.0 to 7.0.1 by @dependabot[bot] in https://github.com/masawada/mdp/pull/69
+- Bump actions/setup-go from 6.4.0 to 7.0.0 by @dependabot[bot] in https://github.com/masawada/mdp/pull/70
+- Bump github.com/yuin/goldmark from 1.8.4 to 1.8.5 by @dependabot[bot] in https://github.com/masawada/mdp/pull/71
+- Resolve relative image paths to file:// URLs in rendered HTML by @masawada in https://github.com/masawada/mdp/pull/76
+- Translate Japanese comments and tidy README wording by @masawada in https://github.com/masawada/mdp/pull/77
+- Accept multiple markdown files as arguments by @masawada in https://github.com/masawada/mdp/pull/78
+
 ## [v0.4.2](https://github.com/masawada/mdp/compare/v0.4.1...v0.4.2) - 2026-07-19
 
 - Bump Go version to 1.25.10 to fix govulncheck vulnerabilities by @masawada in https://github.com/masawada/mdp/pull/67
