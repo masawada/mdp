@@ -193,6 +193,73 @@ func TestRun_OneFileNotFound_GeneratesNothing(t *testing.T) {
 	}
 }
 
+func TestRun_StatError_GeneratesNothing(t *testing.T) {
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "a.md")
+	if err := os.WriteFile(mdFile, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+		t.Fatal(err)
+	}
+	// A self-referential symlink makes os.Stat fail with an error other than "not exist"
+	loop := filepath.Join(tmpDir, "loop.md")
+	if err := os.Symlink(loop, loop); err != nil {
+		t.Fatal(err)
+	}
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run([]string{mdFile, loop}, false, cfg)
+	if exitCode != 1 {
+		t.Errorf("run() exit code = %d, want 1", exitCode)
+	}
+	if !strings.Contains(stderr.String(), loop) {
+		t.Errorf("stderr should name the failing file, got: %s", stderr.String())
+	}
+	if _, err := os.Stat(expectedOutputPath(t, outputDir, mdFile)); err == nil {
+		t.Errorf("HTML for existing file should not be generated when another file cannot be stat'ed")
+	}
+}
+
+func TestRun_OutputPathCollision_GeneratesNothing(t *testing.T) {
+	tmpDir := t.TempDir()
+	// Different extensions with the same stem map to the same output path
+	mdFiles := []string{filepath.Join(tmpDir, "notes.md"), filepath.Join(tmpDir, "notes.markdown")}
+	for _, f := range mdFiles {
+		if err := os.WriteFile(f, []byte("# Hello"), 0644); err != nil { //nolint:gosec // G306: test file
+			t.Fatal(err)
+		}
+	}
+
+	outputDir := filepath.Join(tmpDir, "output")
+	cfg := loadTestConfig(t, tmpDir, outputDir)
+
+	var stdout, stderr bytes.Buffer
+	c := &cli{
+		outWriter: &stdout,
+		errWriter: &stderr,
+	}
+
+	exitCode := c.run(mdFiles, false, cfg)
+	if exitCode != 1 {
+		t.Errorf("run() exit code = %d, want 1", exitCode)
+	}
+	if !strings.Contains(stderr.String(), "same output path") {
+		t.Errorf("stderr should explain the collision, got: %s", stderr.String())
+	}
+	if stdout.String() != "" {
+		t.Errorf("stdout should be empty, got: %s", stdout.String())
+	}
+	if _, err := os.Stat(expectedOutputPath(t, outputDir, mdFiles[0])); err == nil {
+		t.Errorf("HTML should not be generated when output paths collide")
+	}
+}
+
 func TestListFiles_WithFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 	outputDir := filepath.Join(tmpDir, "output")

@@ -37,9 +37,14 @@ func (c *cli) run(filePaths []string, watchMode bool, cfg *config.Config) int {
 		return 1
 	}
 
+	writer := output.NewWriter(cfg.OutputDir)
+	if err := checkOutputPaths(absPaths, writer); err != nil {
+		c.errorf("error: %v\n", err)
+		return 1
+	}
+
 	// Convert every file before opening any of them so that a failure
 	// leaves no half-opened browser tabs
-	writer := output.NewWriter(cfg.OutputDir)
 	outputPaths := make([]string, 0, len(absPaths))
 	for _, absPath := range absPaths {
 		outputPath, err := c.convert(absPath, r, writer)
@@ -75,8 +80,11 @@ func resolveFilePaths(filePaths []string) ([]string, error) {
 	absPaths := make([]string, 0, len(filePaths))
 	seen := make(map[string]bool, len(filePaths))
 	for _, filePath := range filePaths {
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %s", filePath)
+		if _, err := os.Stat(filePath); err != nil {
+			if os.IsNotExist(err) {
+				return nil, fmt.Errorf("file not found: %s", filePath)
+			}
+			return nil, err
 		}
 
 		absPath, err := filepath.Abs(filePath)
@@ -90,6 +98,20 @@ func resolveFilePaths(filePaths []string) ([]string, error) {
 		absPaths = append(absPaths, absPath)
 	}
 	return absPaths, nil
+}
+
+// checkOutputPaths rejects inputs that would be written to the same output
+// path, such as notes.md and notes.markdown.
+func checkOutputPaths(absPaths []string, w *output.Writer) error {
+	sources := make(map[string]string, len(absPaths))
+	for _, absPath := range absPaths {
+		outputPath := w.BuildOutputPath(absPath)
+		if other, ok := sources[outputPath]; ok {
+			return fmt.Errorf("%s and %s would be written to the same output path: %s", other, absPath, outputPath)
+		}
+		sources[outputPath] = absPath
+	}
+	return nil
 }
 
 // runWatchLoop watches for file changes and regenerates HTML.
