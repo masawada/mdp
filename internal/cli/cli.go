@@ -23,13 +23,8 @@ func (c *cli) errorf(format string, args ...any) {
 	_, _ = fmt.Fprintf(c.errWriter, format, args...)
 }
 
-func (c *cli) run(filePath string, watchMode bool, cfg *config.Config) int {
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		c.errorf("error: file not found: %s\n", filePath)
-		return 1
-	}
-
-	absPath, err := filepath.Abs(filePath)
+func (c *cli) run(filePaths []string, watchMode bool, cfg *config.Config) int {
+	absPaths, err := resolveFilePaths(filePaths)
 	if err != nil {
 		c.errorf("error: %v\n", err)
 		return 1
@@ -42,35 +37,65 @@ func (c *cli) run(filePath string, watchMode bool, cfg *config.Config) int {
 		return 1
 	}
 
+	// Convert every file before opening any of them so that a failure
+	// leaves no half-opened browser tabs
 	writer := output.NewWriter(cfg.OutputDir)
-	outputPath, err := c.convert(absPath, r, writer)
-	if err != nil {
-		c.errorf("error: %v\n", err)
-		return 1
+	outputPaths := make([]string, 0, len(absPaths))
+	for _, absPath := range absPaths {
+		outputPath, err := c.convert(absPath, r, writer)
+		if err != nil {
+			c.errorf("error: %v\n", err)
+			return 1
+		}
+		_, _ = fmt.Fprintf(c.outWriter, "Generated: %s\n", outputPath)
+		outputPaths = append(outputPaths, outputPath)
 	}
 
-	_, _ = fmt.Fprintf(c.outWriter, "Generated: %s\n", outputPath)
-
 	opener := browser.NewOpener(cfg.BrowserCommand)
-	if err := opener.Open(outputPath); err != nil {
-		c.errorf("error: failed to open browser: %v\n", err)
-		return 1
+	for _, outputPath := range outputPaths {
+		if err := opener.Open(outputPath); err != nil {
+			c.errorf("error: failed to open browser: %v\n", err)
+			return 1
+		}
 	}
 
 	// If watch mode is enabled, start the watch loop
 	if watchMode {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		return c.runWatchLoop(absPath, r, writer, sigChan)
+		return c.runWatchLoop(absPaths, r, writer, sigChan)
 	}
 
 	return 0
 }
 
+// resolveFilePaths checks that every file exists and returns their absolute
+// paths in the given order, dropping duplicates.
+func resolveFilePaths(filePaths []string) ([]string, error) {
+	absPaths := make([]string, 0, len(filePaths))
+	seen := make(map[string]bool, len(filePaths))
+	for _, filePath := range filePaths {
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			return nil, fmt.Errorf("file not found: %s", filePath)
+		}
+
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			return nil, err
+		}
+		if seen[absPath] {
+			continue
+		}
+		seen[absPath] = true
+		absPaths = append(absPaths, absPath)
+	}
+	return absPaths, nil
+}
+
 // runWatchLoop watches for file changes and regenerates HTML.
-func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writer, sigChan <-chan os.Signal) int {
+func (c *cli) runWatchLoop(filePaths []string, r *renderer.Renderer, w *output.Writer, sigChan <-chan os.Signal) int {
 	// Create watcher
-	fileWatcher, err := watcher.New(filePath)
+	fileWatcher, err := watcher.New(filePaths...)
 	if err != nil {
 		c.errorf("error: failed to start watcher: %v\n", err)
 		return 1
@@ -82,7 +107,7 @@ func (c *cli) runWatchLoop(filePath string, r *renderer.Renderer, w *output.Writ
 
 	for {
 		select {
-		case <-fileWatcher.Events():
+		case filePath := <-fileWatcher.Events():
 			outputPath, err := c.convert(filePath, r, w)
 			if err != nil {
 				c.errorf("error: %v\n", err)
