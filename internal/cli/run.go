@@ -50,5 +50,5 @@ func Run() int {
 		return c.listFiles(cfg)
 	}
 
-	return c.run(args.filePath, args.watchMode, cfg)
+	return c.run(args.filePaths[0], args.watchMode, cfg)
 }
