@@ -114,10 +114,10 @@ func TestWatchIgnoresUnwatchedFile(t *testing.T) {
 
 	w.Start()
 
-	go func() {
-		time.Sleep(100 * time.Millisecond)
-		_ = os.WriteFile(other, []byte("# Updated"), 0600)
-	}()
+	// Write synchronously so the negative wait below starts after the change
+	if err := os.WriteFile(other, []byte("# Updated"), 0600); err != nil {
+		t.Fatal(err)
+	}
 
 	select {
 	case got := <-w.Events():

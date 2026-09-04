@@ -134,6 +134,11 @@ if ! "$MDP_BIN" --config "$multi_config" "${multi_files[@]}" > /dev/null 2>&1; t
     FAILED=1
 else
     touch "$multi_opened_log"
+    opened_total=$(wc -l < "$multi_opened_log" | tr -d ' ')
+    if [[ "$opened_total" != "${#multi_files[@]}" ]]; then
+        echo "FAIL: $multi_name (browser opened $opened_total times, want ${#multi_files[@]})"
+        FAILED=1
+    fi
     for md_file in "${multi_files[@]}"; do
         name=$(basename "$md_file" .md)
         generated_file=$(generated_path "$multi_output" "$md_file")

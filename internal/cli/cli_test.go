@@ -451,11 +451,20 @@ func TestRunWatchLoop_RegeneratesChangedFile(t *testing.T) {
 	w := output.NewWriter(outDir)
 
 	sigChan := make(chan os.Signal, 1)
+	outputB := expectedOutputPath(t, outDir, fileB)
 
 	go func() {
 		time.Sleep(200 * time.Millisecond)
 		_ = os.WriteFile(fileB, []byte("# Updated"), 0600)
-		time.Sleep(500 * time.Millisecond)
+		// Stop once the regenerated file appears; the loop prints before it
+		// returns to select, so the signal is handled after the report
+		deadline := time.Now().Add(5 * time.Second)
+		for time.Now().Before(deadline) {
+			if _, err := os.Stat(outputB); err == nil {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 		sigChan <- syscall.SIGINT
 	}()
 
@@ -464,7 +473,6 @@ func TestRunWatchLoop_RegeneratesChangedFile(t *testing.T) {
 		t.Errorf("runWatchLoop() returned %d, want 0", exitCode)
 	}
 
-	outputB := expectedOutputPath(t, outDir, fileB)
 	if !strings.Contains(outBuf.String(), "Regenerated: "+outputB+"\n") {
 		t.Errorf("stdout should report regeneration of %s, got: %s", outputB, outBuf.String())
 	}
