@@ -69,7 +69,9 @@ func NewRenderer(configDir string, themeName string, opts Options) (*Renderer, e
 }
 
 // Render converts Markdown to HTML, applying the theme template if configured.
-func (r *Renderer) Render(markdown []byte) ([]byte, error) {
+// Relative image paths in the content resolve against baseDir,
+// the directory of the source markdown file.
+func (r *Renderer) Render(markdown []byte, baseDir string) ([]byte, error) {
 	context := parser.NewContext()
 
 	// パースは1回だけ
@@ -87,7 +89,8 @@ func (r *Renderer) Render(markdown []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	html := buf.Bytes()
+	// Rewrite before applying the theme so the template's own img tags stay as they are
+	html := resolveImageSources(buf.Bytes(), baseDir)
 
 	if r.tmpl == nil {
 		return html, nil
