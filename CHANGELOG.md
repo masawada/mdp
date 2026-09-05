@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.5.1](https://github.com/masawada/mdp/compare/v0.5.0...v0.5.1) - 2026-09-05
+
+- fix version comments on pinned actions by @masawada in https://github.com/masawada/mdp/pull/79
+
 ## [v0.5.0](https://github.com/masawada/mdp/compare/v0.4.2...v0.5.0) - 2026-09-04
 
 - fix CI: bump go to 1.25.14 and disable exhaustruct_v5 by @masawada in https://github.com/masawada/mdp/pull/74
